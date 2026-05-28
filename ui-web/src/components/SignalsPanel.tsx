@@ -34,6 +34,7 @@ import { SignalQualityCard } from "@/components/analytics/SignalQualityCard";
 import { SignalTickerTape } from "@/components/analytics/SignalTickerTape";
 import { SignalHeatmapGrid } from "@/components/analytics/SignalHeatmapGrid";
 import { EntryPlanCard } from "@/components/positions/EntryPlanCard";
+import { CoinIcon } from "@/components/ui/CoinIcon";
 
 type DirFilter = "ALL" | "LONG" | "SHORT";
 type SortKey = "score" | "volume" | "discount" | "symbol" | "mtf";
@@ -92,9 +93,9 @@ export function SignalsPanelInner() {
   const shortCount = data?.signals.filter((s) => s.direction === "SHORT").length ?? 0;
 
   return (
-    <div className="px-4 pb-4">
-      <div className="flex items-center justify-between py-2.5 text-[11px] text-[var(--color-fg-faint)] uppercase tracking-wider">
-        <div className="flex items-center gap-3">
+    <div className="px-3 pb-3 md:px-4 md:pb-4">
+      <div className="flex items-center justify-between gap-3 py-2.5 text-xs font-semibold uppercase tracking-[0.04em] text-[var(--color-fg-faint)]">
+        <div className="flex min-w-0 items-center gap-2.5">
           <span>
             {filteredSignals.length} dari {data?.signal_count ?? 0} sinyal
           </span>
@@ -118,7 +119,7 @@ export function SignalsPanelInner() {
       {/* Ticker tape — top signals scrolling marquee */}
       <SignalTickerTape signals={data?.signals} />
 
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
+      <div className="mb-3 flex flex-wrap items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-elev)] p-1.5 shadow-sm">
         <SegmentedControl
           value={dirFilter}
           onChange={(v) => setDirFilter(v as DirFilter)}
@@ -129,28 +130,28 @@ export function SignalsPanelInner() {
           ]}
         />
         {/* View mode toggle */}
-        <div className="inline-flex items-center bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] p-0.5">
+        <div className="inline-flex h-8 items-center rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-elev-2)] p-0.5">
           <button
             onClick={() => setViewMode("list")}
             className={cn(
-              "text-[10px] px-2 py-1 rounded-[var(--radius-sm)] font-medium transition flex items-center gap-1",
+              "flex h-6 items-center gap-1 rounded-[var(--radius-xs)] px-2 text-xs font-semibold transition",
               viewMode === "list"
-                ? "bg-[var(--color-bg-elev-2)] text-[var(--color-accent)]"
+                ? "bg-[var(--color-bg-elev)] text-[var(--color-accent)] shadow-sm"
                 : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]",
             )}
           >
-            <List size={9} /> List
+            <List size={12} /> List
           </button>
           <button
             onClick={() => setViewMode("heatmap")}
             className={cn(
-              "text-[10px] px-2 py-1 rounded-[var(--radius-sm)] font-medium transition flex items-center gap-1",
+              "flex h-6 items-center gap-1 rounded-[var(--radius-xs)] px-2 text-xs font-semibold transition",
               viewMode === "heatmap"
-                ? "bg-[var(--color-bg-elev-2)] text-[var(--color-accent)]"
+                ? "bg-[var(--color-bg-elev)] text-[var(--color-accent)] shadow-sm"
                 : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]",
             )}
           >
-            <Grid3x3 size={9} /> Heatmap
+            <Grid3x3 size={12} /> Heatmap
           </button>
         </div>
         <ToolbarDropdown
@@ -179,15 +180,15 @@ export function SignalsPanelInner() {
         />
         <div className="relative ml-auto">
           <Search
-            size={11}
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-[var(--color-fg-faint)]"
+            size={13}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--color-fg-faint)]"
           />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari koin..."
-            className="text-[10px] pl-7 pr-2 py-1 w-[140px] rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] text-[var(--color-fg)] focus:outline-none focus:ring-[var(--color-accent)]/40 placeholder:text-[var(--color-fg-faint)]"
+            className="h-8 w-[180px] rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-elev-2)] pl-8 pr-2.5 text-xs font-medium text-[var(--color-fg)] placeholder:text-[var(--color-fg-faint)] focus:border-[var(--color-accent)]/50 focus:outline-none"
           />
         </div>
       </div>
@@ -204,43 +205,53 @@ export function SignalsPanelInner() {
       )}
 
       {viewMode === "list" && isLoading ? (
-        <div className="text-[11px] text-[var(--color-fg-subtle)] py-4 text-center">
+        <div className="py-4 text-center text-xs text-[var(--color-fg-subtle)]">
           Memindai koin berkualitas...
         </div>
       ) : viewMode === "list" && filteredSignals.length === 0 ? (
         <div className="py-6 text-center">
-          <div className="text-[11px] text-[var(--color-fg-subtle)] mb-1">
+          <div className="mb-1 text-xs text-[var(--color-fg-subtle)]">
             Belum ada setup {dirFilter !== "ALL" ? dirFilter : ""} di skor ≥{minScore}
           </div>
-          <div className="text-[10px] text-[var(--color-fg-faint)] flex items-center justify-center gap-1.5">
+          <div className="flex items-center justify-center gap-1.5 text-xs text-[var(--color-fg-faint)]">
             <AlertTriangle size={10} />
             Sabar &gt; FOMO. Tunggu confluence kuat.
           </div>
         </div>
       ) : (
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: {},
-            visible: { transition: { staggerChildren: 0.04 } },
-          }}
-          className="space-y-1.5"
-        >
-          {viewMode === "list" &&
-            filteredSignals.map((s) => (
-              <SignalRow
-                key={s.symbol}
-                signal={s}
-                isExpanded={expanded === s.symbol}
-                onToggle={() => setExpanded((cur) => (cur === s.symbol ? null : s.symbol))}
-                accounts={accounts}
-                equityUsd={equityUsd}
-                cascadeDisabled={cascadeDisabled}
-                cascadeDisabledReason={cascadeDisabledReason}
-              />
-            ))}
-        </motion.div>
+        <div>
+          {viewMode === "list" && filteredSignals.length > 0 && (
+            <div className="mb-1 hidden grid-cols-[minmax(240px,1.05fr)_minmax(420px,1.6fr)_82px_150px] items-center gap-3 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-fg-faint)] lg:grid">
+              <span>Sinyal</span>
+              <span>Timeframe RSI</span>
+              <span className="text-right">Skor</span>
+              <span className="text-right">Entry</span>
+            </div>
+          )}
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.04 } },
+            }}
+            className="space-y-1.5"
+          >
+            {viewMode === "list" &&
+              filteredSignals.map((s) => (
+                <SignalRow
+                  key={s.symbol}
+                  signal={s}
+                  isExpanded={expanded === s.symbol}
+                  onToggle={() => setExpanded((cur) => (cur === s.symbol ? null : s.symbol))}
+                  accounts={accounts}
+                  equityUsd={equityUsd}
+                  cascadeDisabled={cascadeDisabled}
+                  cascadeDisabledReason={cascadeDisabledReason}
+                />
+              ))}
+          </motion.div>
+        </div>
       )}
     </div>
   );
@@ -268,7 +279,7 @@ function SegmentedControl<T extends string>({
   options: { value: T; label: string; icon?: React.ReactNode }[];
 }) {
   return (
-    <div className="inline-flex items-center bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] p-0.5">
+    <div className="inline-flex h-8 items-center rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-elev-2)] p-0.5">
       {options.map((opt) => {
         const active = opt.value === value;
         const tone =
@@ -282,9 +293,9 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             onClick={() => onChange(opt.value)}
             className={cn(
-              "text-[10px] px-2.5 py-1 rounded-[var(--radius-sm)] font-medium transition flex items-center gap-1",
+              "flex h-6 items-center gap-1 rounded-[var(--radius-xs)] px-2.5 text-xs font-semibold transition",
               active
-                ? "bg-[var(--color-bg-elev-2)] shadow-sm"
+                ? "bg-[var(--color-bg-elev)] shadow-sm"
                 : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]",
             )}
             style={active ? { color: tone, boxShadow: `0 0 0 1px ${tone}40` } : undefined}
@@ -312,13 +323,13 @@ function ToolbarDropdown({
   onChange: (v: string) => void;
 }) {
   return (
-    <label className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] px-2 py-1 hover:bg-[var(--color-accent-soft)] transition cursor-pointer">
+    <label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-elev-2)] px-2.5 text-xs font-semibold uppercase tracking-[0.04em] transition hover:bg-[var(--color-accent-soft)]">
       {icon && <span className="text-[var(--color-fg-subtle)]">{icon}</span>}
       <span className="text-[var(--color-fg-subtle)]">{label}:</span>
       <select
         value={options.find((o) => o.label.startsWith(value))?.value ?? value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-transparent text-[var(--color-fg)] focus:outline-none cursor-pointer font-medium normal-case tracking-normal pr-1"
+        className="cursor-pointer bg-transparent pr-1 font-semibold normal-case tracking-normal text-[var(--color-fg)] focus:outline-none"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value} className="bg-[var(--color-bg-elev)]">
@@ -367,6 +378,7 @@ function SignalRow({
   const wyckoff = signal.wyckoff_spring_upthrust;
   const hasSpring = !!wyckoff?.spring;
   const hasUpthrust = !!wyckoff?.upthrust;
+  const coin = signal.coin || signal.symbol.split("_")[0];
 
   return (
     <motion.div
@@ -375,21 +387,21 @@ function SignalRow({
         visible: { opacity: 1, x: 0 },
       }}
       transition={{ duration: 0.25, ease: [0.34, 1.4, 0.4, 1] }}
-      className="rounded-[var(--radius-md)] bg-[var(--color-bg-elev)] ring-1 ring-[var(--color-border)] overflow-hidden hover:ring-[var(--color-border-strong)] transition-shadow"
+      className="overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-elev)] shadow-sm transition hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-elev-2)]"
     >
-      {/* Compact summary row */}
+      {/* Compact summary — card layout, no horizontal scroll */}
       <button
         type="button"
         onClick={onToggle}
-        className="w-full grid grid-cols-[16px_1.2fr_56px_1fr_auto_auto] gap-3 items-center px-3 py-2 text-left row-hover transition"
+        className="grid w-full grid-cols-1 gap-2 px-3 py-2.5 text-left transition lg:grid-cols-[minmax(240px,1.05fr)_minmax(420px,1.6fr)_82px_150px] lg:items-center lg:gap-3"
       >
-        <span className="text-[var(--color-fg-subtle)]">
-          {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
-        </span>
-
-        <div className="flex items-center gap-2 min-w-0">
+        {/* Row 1: chevron + badge + symbol + score right-aligned */}
+        <div className="flex min-w-0 items-start gap-2">
+          <span className="mt-0.5 shrink-0 text-[var(--color-fg-subtle)]">
+            {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+          </span>
           <span
-            className="px-1.5 py-0.5 rounded-[var(--radius-sm)] text-[9px] font-bold uppercase tracking-wider ring-1 flex items-center gap-1 shrink-0"
+            className="flex h-6 shrink-0 items-center gap-1 rounded-[var(--radius-sm)] px-2 text-xs font-bold uppercase tracking-[0.04em] ring-1"
             style={{
               color: tone,
               background: `color-mix(in oklch, ${tone} 12%, transparent)`,
@@ -399,36 +411,23 @@ function SignalRow({
             <DirIcon size={10} />
             {direction}
           </span>
-          <div className="leading-tight min-w-0">
-            <div className="text-xs font-semibold truncate flex items-center gap-1.5">
-              {signal.symbol}
-              {liqCluster?.detected && (
-                <span
-                  className="text-[8px] px-1 py-0.5 rounded font-bold uppercase tracking-wider"
-                  style={{
-                    color: liqCluster.side === "long_squeeze" ? "var(--color-danger)" : "var(--color-success)",
-                    background: `color-mix(in oklch, ${liqCluster.side === "long_squeeze" ? "var(--color-danger)" : "var(--color-success)"} 14%, transparent)`,
-                  }}
-                >
-                  💥 squeeze
-                </span>
-              )}
+          <CoinIcon coin={coin} iconUrl={signal.icon_url} size={28} />
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="text-sm font-bold text-[var(--color-fg)]">{coin}</span>
+              <span className="text-xs font-semibold text-[var(--color-fg-subtle)]">{signal.symbol}</span>
               {hasSpring && (
-                <span
-                  className="text-[8px] px-1 py-0.5 rounded font-bold uppercase tracking-wider text-[var(--color-success)] bg-[var(--color-success-soft)]"
-                >
-                  ⚡ spring
+                <span className="rounded bg-[var(--color-success-soft)] px-1.5 py-0.5 text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-success)]">
+                  SPRING
                 </span>
               )}
               {hasUpthrust && (
-                <span
-                  className="text-[8px] px-1 py-0.5 rounded font-bold uppercase tracking-wider text-[var(--color-danger)] bg-[var(--color-danger-soft)]"
-                >
-                  ⚡ upthrust
+                <span className="rounded bg-[var(--color-danger-soft)] px-1.5 py-0.5 text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-danger)]">
+                  UPTHRUST
                 </span>
               )}
             </div>
-            <div className="text-[10px] text-[var(--color-fg-faint)] flex items-center gap-1.5">
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-[var(--color-fg-faint)]">
               {isLong && (signal.mtf_oversold_count ?? 0) > 0 && (
                 <span className="text-[var(--color-success)]">
                   {signal.mtf_oversold_count}/4 oversold
@@ -449,52 +448,61 @@ function SignalRow({
           </div>
         </div>
 
-        <div className="text-right">
-          <div className="text-base font-bold num leading-none" style={{ color: tone }}>
-            {score}
+        {/* Row 2: RSI cells + MTF + entry — always fits */}
+        <div className="grid grid-cols-2 items-center gap-1.5 pl-7 sm:grid-cols-[repeat(4,minmax(64px,1fr))_54px] lg:pl-0">
+          <div className="contents num">
+            <MtfRsi label="15M" v={signal.rsi_15m} />
+            <MtfRsi label="1H" v={signal.rsi_1h} />
+            <MtfRsi label="4H" v={signal.rsi_4h} />
+            <MtfRsi label="1D" v={signal.rsi_1d} />
           </div>
-          <div className="text-[8px] uppercase tracking-wider font-bold" style={{ color: tone }}>
-            {verdict}
+          {mtfScore != null && (
+            <div
+              className="min-h-10 rounded-[var(--radius-sm)] border px-1.5 py-1 text-center leading-tight"
+              style={{
+                color: mtfScore >= 60 ? tone : "var(--color-fg-muted)",
+                background: `color-mix(in oklch, ${mtfScore >= 60 ? tone : "var(--color-fg-muted)"} 8%, transparent)`,
+                borderColor: `color-mix(in oklch, ${mtfScore >= 60 ? tone : "var(--color-fg-muted)"} 30%, transparent)`,
+              }}
+              title="Multi-TF Convergence"
+            >
+              <div className="text-xs font-bold uppercase tracking-[0.04em] opacity-65">MTF</div>
+              <div className="num text-xs font-bold">{mtfScore}</div>
+            </div>
+          )}
+          {mtfScore == null && <div />}
+        </div>
+
+        <div className="flex items-center justify-between pl-7 leading-tight lg:block lg:pl-0 lg:text-right">
+          <span className="text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-fg-faint)] lg:hidden">
+            Skor
+          </span>
+          <div>
+            <div className="num text-xl font-bold leading-none" style={{ color: tone }}>
+              {score}
+            </div>
+            <div className="mt-0.5 text-xs font-bold uppercase tracking-[0.04em]" style={{ color: tone }}>
+              {verdict}
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-0.5 text-[9px] num">
-          <MtfRsi label="15m" v={signal.rsi_15m} />
-          <MtfRsi label="1h" v={signal.rsi_1h} />
-          <MtfRsi label="4h" v={signal.rsi_4h} />
-          <MtfRsi label="1d" v={signal.rsi_1d} />
-        </div>
-
-        {/* MTF Convergence pill */}
-        {mtfScore != null && (
-          <div
-            className="text-center leading-tight px-2 py-1 rounded-[var(--radius-sm)] ring-1"
-            style={{
-              color: mtfScore >= 60 ? tone : "var(--color-fg-muted)",
-              background: `color-mix(in oklch, ${mtfScore >= 60 ? tone : "var(--color-fg-muted)"} 8%, transparent)`,
-              borderColor: `color-mix(in oklch, ${mtfScore >= 60 ? tone : "var(--color-fg-muted)"} 30%, transparent)`,
-            }}
-            title="Multi-TF Convergence"
-          >
-            <div className="text-[8px] uppercase tracking-wider opacity-70">MTF</div>
-            <div className="text-[11px] font-bold num">{mtfScore}</div>
+        <div className="flex items-center justify-between pl-7 leading-tight lg:block lg:pl-0 lg:text-right">
+          <span className="text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-fg-faint)] lg:hidden">
+            Entry
+          </span>
+          <div>
+            {signal.entry_plan?.entry_price != null && (
+              <div className="num text-xs font-bold" style={{ color: tone }}>
+                @ {signal.entry_plan.entry_price.toLocaleString("en-US", { maximumFractionDigits: 6 })}
+              </div>
+            )}
+            {(signal.sizing_pct_equity ?? 0) > 0 && (
+              <div className="text-xs font-bold text-[var(--color-accent)]">
+                size {signal.sizing_pct_equity}% eq
+              </div>
+            )}
           </div>
-        )}
-
-        <div className="text-right leading-tight">
-          {signal.entry_plan?.entry_price != null && (
-            <div className="text-[10px] num font-semibold" style={{ color: tone }}>
-              entry @{" "}
-              {signal.entry_plan.entry_price.toLocaleString("en-US", {
-                maximumFractionDigits: 6,
-              })}
-            </div>
-          )}
-          {(signal.sizing_pct_equity ?? 0) > 0 && (
-            <div className="text-[9px] text-[var(--color-accent)] font-bold">
-              size {signal.sizing_pct_equity}% eq
-            </div>
-          )}
         </div>
       </button>
 
@@ -726,13 +734,13 @@ function MtfRsi({ label, v }: { label: string; v?: number | null }) {
           : "var(--color-fg-muted)";
   return (
     <div
-      className="rounded text-center px-1 py-0.5"
-      style={{ background: `color-mix(in oklch, ${tone} 8%, transparent)` }}
+      className="min-h-10 rounded-[var(--radius-sm)] border border-[var(--color-border)] px-2 py-1 text-center"
+      style={{ background: `color-mix(in oklch, ${tone} 8%, var(--color-bg-elev-2))` }}
     >
-      <div className="text-[8px] text-[var(--color-fg-faint)] uppercase tracking-wider">
+      <div className="text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-fg-faint)]">
         {label}
       </div>
-      <div className="num font-bold text-[10px]" style={{ color: tone }}>
+      <div className="num text-xs font-bold leading-tight" style={{ color: tone }}>
         {v != null ? v.toFixed(0) : "—"}
       </div>
     </div>

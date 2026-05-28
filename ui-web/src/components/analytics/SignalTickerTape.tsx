@@ -23,9 +23,9 @@ export function SignalTickerTape({ signals }: Props) {
   const display = [...filtered, ...filtered];
 
   return (
-    <div className="relative overflow-hidden rounded-[var(--radius-md)] bg-gradient-to-r from-black/30 via-black/40 to-black/30 ring-1 ring-[var(--color-border)] py-1.5 mb-3">
-      <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[var(--color-bg)] to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[var(--color-bg)] to-transparent z-10 pointer-events-none" />
+    <div className="relative mb-3 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-elev)] py-1.5 shadow-sm">
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[var(--color-bg-elev)] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[var(--color-bg-elev)] to-transparent" />
       <motion.div
         className="flex items-center gap-6 whitespace-nowrap"
         animate={{ x: ["0%", "-50%"] }}
@@ -37,7 +37,7 @@ export function SignalTickerTape({ signals }: Props) {
           const isPremium = s.confluence_score >= 80;
           const Icon = isLong ? TrendingUp : TrendingDown;
           return (
-            <div key={`${s.symbol}-${i}`} className="flex items-center gap-2 px-2 text-[11px]">
+            <div key={`${s.symbol}-${i}`} className="flex items-center gap-2 px-2 text-[11px] font-semibold">
               {isPremium && <Flame size={11} className="text-[var(--color-warning)] animate-pulse" />}
               <Icon size={11} style={{ color: tone }} />
               <span className="font-bold" style={{ color: tone }}>

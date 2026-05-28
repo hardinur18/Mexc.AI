@@ -193,19 +193,19 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
         </div>
       </td>
 
-      {/* Mark / Entry / Δ + 24h sparkline (bigger 95×30) */}
+      {/* Mark / Entry / Δ + 24h sparkline */}
       <td className="px-3 py-2.5 leading-tight">
-        <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-          <div className="flex justify-end">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0 overflow-hidden" style={{ width: 72, height: 28 }}>
             <Sparkline
               data={p.sparkline || []}
-              width={95}
-              height={30}
+              width={72}
+              height={28}
               refPrice={p.entry}
               markPrice={p.price}
             />
           </div>
-          <div className="text-right num w-[90px]">
+          <div className="text-right num flex-1 min-w-0">
             <AnimatedNumber
               value={p.price}
               format={(v) => fmtPrice(v)}

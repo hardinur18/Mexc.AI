@@ -4836,9 +4836,17 @@ def get_signals(min_score: int = Query(default=_signals_threshold, ge=0, le=100)
                 record_signal_event(sym, a)
             except Exception:
                 pass
+            # Fetch icon URL from contract cache (cheap, already cached)
+            try:
+                _ctr = get_contract_cached(sym)
+                _icon = _ctr.get("baseCoinIconUrl") or None
+            except Exception:
+                _icon = None
             out.append(
                 {
                     "symbol": sym,
+                    "coin": sym.split("_")[0],
+                    "icon_url": _icon,
                     "direction": direction,
                     "confluence_score": a["confluence_score"],
                     "score_long": a.get("score_long", 0),

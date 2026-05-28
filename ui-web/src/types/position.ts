@@ -691,6 +691,8 @@ export interface EntryPlan {
 
 export interface Signal {
   symbol: string;
+  coin?: string;
+  icon_url?: string | null;
   confluence_score: number;
   breakdown: AnalyticsBreakdownItem[];
   rsi_15m?: number | null;

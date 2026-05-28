@@ -53,8 +53,8 @@ export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
     >
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-bg-elev)]/92 shadow-[var(--shadow-card)] backdrop-blur-2xl">
         <div className={cn("flex h-16 shrink-0 items-center border-b border-[var(--color-border)]/60 px-3", collapsed ? "justify-center" : "gap-3")}>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[linear-gradient(135deg,var(--color-accent),var(--color-success))] shadow-[var(--shadow-soft)]">
-            <span className="text-[12px] font-black text-[var(--color-bg)]">MX</span>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-accent)] shadow-[var(--shadow-soft)]">
+            <span className="text-[12px] font-black text-white">MX</span>
           </div>
           {!collapsed && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-w-0">

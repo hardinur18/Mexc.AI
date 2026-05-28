@@ -10,39 +10,39 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, "SF Mono", monospace;
 
-  /* Surface / brand colors */
-  --color-bg: oklch(13.5% 0.012 250);
-  --color-bg-elev: oklch(17% 0.014 250);
-  --color-bg-elev-2: oklch(21% 0.016 250);
-  --color-surface: oklch(20% 0.014 250 / 0.72);
-  --color-border: oklch(32% 0.015 250 / 0.46);
-  --color-border-strong: oklch(45% 0.02 250 / 0.62);
+  /* Surface / brand colors — MEXC-inspired blue trading theme */
+  --color-bg: oklch(10% 0.025 255);
+  --color-bg-elev: oklch(14.5% 0.03 255);
+  --color-bg-elev-2: oklch(18.5% 0.032 255);
+  --color-surface: oklch(17% 0.03 255 / 0.76);
+  --color-border: oklch(26% 0.03 255 / 0.52);
+  --color-border-strong: oklch(38% 0.035 255 / 0.62);
 
-  --color-fg: oklch(95% 0.01 260);
-  --color-fg-muted: oklch(70% 0.015 260);
-  --color-fg-subtle: oklch(55% 0.02 260);
-  --color-fg-faint: oklch(40% 0.02 260);
+  --color-fg: oklch(94% 0.006 250);
+  --color-fg-muted: oklch(68% 0.016 255);
+  --color-fg-subtle: oklch(52% 0.02 255);
+  --color-fg-faint: oklch(38% 0.02 255);
 
-  --color-accent: oklch(73% 0.14 225);
-  --color-accent-soft: oklch(73% 0.14 225 / 0.14);
-  --color-accent-ring: oklch(73% 0.14 225 / 0.38);
+  --color-accent: oklch(62% 0.22 255);
+  --color-accent-soft: oklch(62% 0.22 255 / 0.14);
+  --color-accent-ring: oklch(62% 0.22 255 / 0.38);
 
-  --color-success: oklch(78% 0.17 165);
-  --color-success-soft: oklch(78% 0.17 165 / 0.12);
-  --color-warning: oklch(80% 0.17 75);
-  --color-warning-soft: oklch(80% 0.17 75 / 0.12);
-  --color-danger: oklch(70% 0.22 25);
-  --color-danger-soft: oklch(70% 0.22 25 / 0.12);
-  --color-info: oklch(75% 0.13 220);
+  --color-success: oklch(74% 0.19 162);
+  --color-success-soft: oklch(74% 0.19 162 / 0.13);
+  --color-warning: oklch(80% 0.17 80);
+  --color-warning-soft: oklch(80% 0.17 80 / 0.12);
+  --color-danger: oklch(65% 0.24 25);
+  --color-danger-soft: oklch(65% 0.24 25 / 0.13);
+  --color-info: oklch(68% 0.16 240);
 
-  --color-long: oklch(78% 0.17 165);
-  --color-short: oklch(70% 0.22 25);
+  --color-long: oklch(74% 0.19 162);
+  --color-short: oklch(65% 0.24 25);
 
   /* Radius scale */
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
-  --radius-lg: 8px;
+  --radius-lg: 10px;
   --radius-xl: 10px;
   --radius-2xl: 12px;
   --radius-full: 9999px;
@@ -101,32 +101,32 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --color-bg: oklch(95.5% 0.004 250);
-  --color-bg-elev: oklch(99% 0.001 250);
-  --color-bg-elev-2: oklch(96.5% 0.004 250);
-  --color-surface: oklch(98% 0.002 250 / 0.84);
-  --color-border: oklch(84% 0.007 250 / 0.76);
-  --color-border-strong: oklch(72% 0.011 250 / 0.68);
+  --color-bg: oklch(96% 0.008 250);
+  --color-bg-elev: oklch(99% 0.003 250);
+  --color-bg-elev-2: oklch(97% 0.006 250);
+  --color-surface: oklch(98% 0.004 250 / 0.86);
+  --color-border: oklch(85% 0.012 255 / 0.76);
+  --color-border-strong: oklch(72% 0.018 255 / 0.68);
 
-  --color-fg: oklch(18% 0.015 260);
-  --color-fg-muted: oklch(35% 0.015 260);
-  --color-fg-subtle: oklch(50% 0.012 260);
-  --color-fg-faint: oklch(65% 0.008 260);
+  --color-fg: oklch(18% 0.02 255);
+  --color-fg-muted: oklch(35% 0.018 255);
+  --color-fg-subtle: oklch(50% 0.016 255);
+  --color-fg-faint: oklch(65% 0.01 255);
 
-  --color-accent: oklch(50% 0.16 225);
-  --color-accent-soft: oklch(50% 0.16 225 / 0.08);
-  --color-accent-ring: oklch(50% 0.16 225 / 0.24);
+  --color-accent: oklch(48% 0.22 255);
+  --color-accent-soft: oklch(48% 0.22 255 / 0.08);
+  --color-accent-ring: oklch(48% 0.22 255 / 0.24);
 
-  --color-success: oklch(45% 0.17 165);
-  --color-success-soft: oklch(45% 0.17 165 / 0.08);
-  --color-warning: oklch(55% 0.17 75);
-  --color-warning-soft: oklch(55% 0.17 75 / 0.08);
-  --color-danger: oklch(50% 0.22 25);
-  --color-danger-soft: oklch(50% 0.22 25 / 0.07);
-  --color-info: oklch(48% 0.13 220);
+  --color-success: oklch(42% 0.17 162);
+  --color-success-soft: oklch(42% 0.17 162 / 0.08);
+  --color-warning: oklch(52% 0.17 80);
+  --color-warning-soft: oklch(52% 0.17 80 / 0.08);
+  --color-danger: oklch(48% 0.24 25);
+  --color-danger-soft: oklch(48% 0.24 25 / 0.07);
+  --color-info: oklch(45% 0.16 240);
 
-  --color-long: oklch(45% 0.17 165);
-  --color-short: oklch(50% 0.22 25);
+  --color-long: oklch(42% 0.17 162);
+  --color-short: oklch(48% 0.24 25);
 
   --shadow-soft: 0 1px 2px oklch(0% 0 0 / 0.045), 0 0 0 1px oklch(0% 0 0 / 0.025);
   --shadow-card: 0 8px 22px oklch(0% 0 0 / 0.055), 0 0 0 1px oklch(0% 0 0 / 0.035);
@@ -145,7 +145,7 @@ body {
 
 :root[data-theme="light"] body {
   background:
-    linear-gradient(180deg, oklch(98% 0.004 250), oklch(94.5% 0.006 250)),
+    linear-gradient(180deg, oklch(98% 0.006 250), oklch(95% 0.01 250)),
     var(--color-bg);
 }
 
@@ -181,8 +181,8 @@ body::before {
 
 :root[data-theme="light"] body::before {
   background:
-    radial-gradient(circle at 70% 20%, oklch(72% 0.18 280 / 0.03) 0%, transparent 35%),
-    radial-gradient(circle at 30% 80%, oklch(78% 0.17 165 / 0.02) 0%, transparent 40%);
+    radial-gradient(circle at 70% 20%, oklch(62% 0.22 255 / 0.04) 0%, transparent 35%),
+    radial-gradient(circle at 30% 80%, oklch(74% 0.19 162 / 0.03) 0%, transparent 40%);
 }
 
 @keyframes ambient-drift {
@@ -474,11 +474,11 @@ button svg,
 
 :root[data-theme="light"] .inner-card,
 :root[data-theme="light"] .ui-subcard {
-  background: oklch(98.4% 0.002 250);
+  background: oklch(98.5% 0.005 250);
 }
 
 :root[data-theme="light"] .detail-panel {
-  background: oklch(95.5% 0.004 250);
+  background: oklch(96% 0.008 250);
 }
 
 /* ─── 2026 micro-interactions ─── */
@@ -518,10 +518,10 @@ button svg,
   padding: 1px;
   border-radius: inherit;
   background: linear-gradient(135deg,
-    color-mix(in oklch, var(--color-accent) 30%, transparent),
-    transparent 30%,
-    transparent 70%,
-    color-mix(in oklch, var(--color-success) 20%, transparent));
+    color-mix(in oklch, var(--color-accent) 40%, transparent),
+    transparent 35%,
+    transparent 65%,
+    color-mix(in oklch, var(--color-accent) 18%, transparent));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;

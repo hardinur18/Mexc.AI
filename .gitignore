@@ -1,0 +1,27 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+API MEXC.md
+*.key
+*.pem
+*.log
+logs/
+*.sqlite
+*.sqlite3
+data/
+upstream/nautilus_trader/
+upstream/hummingbot/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+.venv-nautilus/
+venv/
+dist/
+build/
+*.egg-info/
+accounts.json
+node_modules/

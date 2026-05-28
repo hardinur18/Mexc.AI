@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+/* ════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — TERPUSAT
+   Edit di sini untuk override semua component (colors, radius,
+   fonts, spacing, shadows, motion, dst).
+   ════════════════════════════════════════════════════════════════ */
+@theme {
+  /* Type scale */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Surface / brand colors */
+  --color-bg: oklch(15% 0.015 260);
+  --color-bg-elev: oklch(18% 0.018 260);
+  --color-bg-elev-2: oklch(22% 0.02 260);
+  --color-surface: oklch(20% 0.015 260 / 0.6);
+  --color-border: oklch(30% 0.02 260 / 0.4);
+  --color-border-strong: oklch(40% 0.025 260 / 0.6);
+
+  --color-fg: oklch(95% 0.01 260);
+  --color-fg-muted: oklch(70% 0.015 260);
+  --color-fg-subtle: oklch(55% 0.02 260);
+  --color-fg-faint: oklch(40% 0.02 260);
+
+  --color-accent: oklch(72% 0.18 280);
+  --color-accent-soft: oklch(72% 0.18 280 / 0.15);
+  --color-accent-ring: oklch(72% 0.18 280 / 0.4);
+
+  --color-success: oklch(78% 0.17 165);
+  --color-success-soft: oklch(78% 0.17 165 / 0.12);
+  --color-warning: oklch(80% 0.17 75);
+  --color-warning-soft: oklch(80% 0.17 75 / 0.12);
+  --color-danger: oklch(70% 0.22 25);
+  --color-danger-soft: oklch(70% 0.22 25 / 0.12);
+  --color-info: oklch(75% 0.13 220);
+
+  --color-long: oklch(78% 0.17 165);
+  --color-short: oklch(70% 0.22 25);
+
+  /* Radius scale */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-soft: 0 1px 2px oklch(0% 0 0 / 0.3);
+  --shadow-card: 0 4px 16px oklch(0% 0 0 / 0.3);
+  --shadow-pop: 0 12px 40px oklch(0% 0 0 / 0.4);
+
+  /* Animation timing */
+  --ease-bounce: cubic-bezier(0.34, 1.4, 0.4, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --duration-fast: 150ms;
+  --duration-base: 280ms;
+  --duration-slow: 600ms;
+  --duration-xslow: 1000ms;
+
+  /* Typography scale — pakai ini, jangan hardcode text-[10px] dst */
+  --text-micro: 9px;
+  --text-caption: 10px;
+  --text-label: 11px;
+  --text-body: 12px;
+  --text-h6: 13px;
+  --text-h5: 14px;
+  --text-h4: 16px;
+  --text-h3: 18px;
+  --text-h2: 22px;
+  --text-h1: 28px;
+
+  /* Spacing scale — kelipatan 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+
+/* Root reset */
+:root {
+  color-scheme: dark;
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum", "cv11";
+  color: var(--color-fg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background:
+    radial-gradient(ellipse 60% 40% at 20% 0%, oklch(25% 0.05 280 / 0.5) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 80% 30%, oklch(22% 0.04 220 / 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, oklch(20% 0.03 320 / 0.3) 0%, transparent 60%),
+    var(--color-bg);
+  background-attachment: fixed;
+  min-height: 100vh;
+  margin: 0;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 70% 20%, oklch(72% 0.18 280 / 0.05) 0%, transparent 35%),
+    radial-gradient(circle at 30% 80%, oklch(78% 0.17 165 / 0.04) 0%, transparent 40%);
+  animation: ambient-drift 20s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes ambient-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(2%, -1%) scale(1.05); }
+  66%      { transform: translate(-1%, 2%) scale(0.98); }
+}
+
+#root { position: relative; z-index: 1; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-fg-subtle); }
+
+/* Utility classes (set via tokens) */
+.num { font-variant-numeric: tabular-nums; }
+.glass {
+  background: var(--color-surface);
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--color-border);
+}
+
+/* ─── 2026 micro-interactions ─── */
+/* Card lift on hover — apply via class="lift" */
+.lift {
+  transition: transform var(--duration-fast) var(--ease-bounce),
+              box-shadow var(--duration-fast) var(--ease-out-quart),
+              border-color var(--duration-fast) ease;
+}
+.lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-pop);
+  border-color: var(--color-border-strong);
+}
+
+/* Subtle glow on hover for interactive cards */
+.glow-accent:hover {
+  box-shadow: 0 0 18px color-mix(in oklch, var(--color-accent) 25%, transparent);
+}
+
+/* Row hover highlight */
+.row-hover {
+  transition: background var(--duration-fast) ease;
+}
+.row-hover:hover {
+  background: color-mix(in oklch, var(--color-fg) 4%, transparent);
+}
+
+/* Gradient border (2026 trend) — overlay on dark surfaces */
+.grad-border {
+  position: relative;
+}
+.grad-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg,
+    color-mix(in oklch, var(--color-accent) 30%, transparent),
+    transparent 30%,
+    transparent 70%,
+    color-mix(in oklch, var(--color-success) 20%, transparent));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Keyframes (token-driven via design vars) */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 14px 4px var(--color-accent-ring), 0 0 0 2px var(--color-accent-ring); transform: scale(1); }
+  50%      { box-shadow: 0 0 22px 7px var(--color-accent-ring), 0 0 0 3px var(--color-accent-ring); transform: scale(1.1); }
+}
+@keyframes ghost-ring {
+  0%   { opacity: 0.6; transform: scale(0.5); }
+  100% { opacity: 0;   transform: scale(2.4); }
+}
+@keyframes shimmer {
+  0%   { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+@keyframes warn-flash {
+  0%, 100% { box-shadow: 0 0 0 0 var(--color-danger); }
+  50%      { box-shadow: 0 0 0 12px transparent; }
+}
+
+/* Reduced motion — respect user a11y preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

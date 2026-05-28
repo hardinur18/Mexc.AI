@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mexc-futures-engine"
+version = "0.1.0"
+description = "Safe MEXC Futures execution foundation with dry-run and risk guards."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "websocket-client>=1.8.0",
+]
+
+[project.scripts]
+mexc-engine = "mexc_futures_engine.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

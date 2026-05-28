@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MEXC Futures · Live</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  body { background: radial-gradient(ellipse at top, #1a1f2e 0%, #0a0d14 60%); min-height: 100vh; font-feature-settings: "tnum"; }
+  .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
+  .num { font-variant-numeric: tabular-nums; }
+  .grow-pulse { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.5 } }
+  .row-fade { animation: rowfade .4s ease-out; }
+  @keyframes rowfade { from { background: rgba(99, 102, 241, .12) } to { background: transparent } }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: #c7d2fe; }
+  .pnl-up { color: #22d3a3; }
+  .pnl-down { color: #f87171; }
+  .pnl-zero { color: #94a3b8; }
+  .bar { height: 4px; border-radius: 9999px; background: linear-gradient(90deg, #ef4444 0%, #f59e0b 30%, #10b981 60%); position: relative; overflow: hidden; }
+  .bar > i { position: absolute; top: -2px; bottom: -2px; width: 2px; background: white; transition: left .4s ease; }
+
+  /* ════════ PRICE LADDER ════════ */
+  .ladder { position: relative; padding: 100px 0 80px; min-height: 220px; }
+  .ladder-stage { position: relative; height: 6px; margin: 0 90px; }
+  .ladder .track {
+    position: absolute; inset: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(239,68,68,.65) 0%, rgba(239,68,68,.25) 12%, rgba(148,163,184,.18) 35%, rgba(16,185,129,.35) 65%, rgba(16,185,129,.6) 100%);
+    overflow: hidden;
+  }
+  .ladder .track::before {
+    content:''; position:absolute; inset:0; border-radius:inherit;
+    background: linear-gradient(90deg, transparent 20%, rgba(255,255,255,.18) 50%, transparent 80%);
+    background-size: 200% 100%; animation: shimmer 5s linear infinite;
+  }
+  @keyframes shimmer { from { background-position: -100% 0 } to { background-position: 200% 0 } }
+
+  .ladder-stage .mk { position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 1s cubic-bezier(.34,1.2,.4,1); z-index: 2; }
+  .ladder .mk .dot { width: 10px; height: 10px; border-radius: 50%; position: relative; }
+  .ladder .mk .lbl { position: absolute; left: 50%; transform: translateX(-50%); white-space: nowrap; text-align: center; letter-spacing: 0.02em; line-height: 1.5; }
+  .ladder .mk .lbl.below { top: 22px; }
+  .ladder .mk .lbl.above { bottom: 24px; }
+  .ladder .mk .lbl .px { color: #cbd5e1; font-weight: 500; font-size: 11px; }
+  .ladder .mk .lbl .sub { color: #64748b; font-size: 9px; margin-top: 4px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* Liquidation marker */
+  .ladder .mk.liq .dot { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.18); }
+  .ladder .mk.liq .lbl .px { color: #fca5a5; }
+
+  /* Entry marker — diamond */
+  .ladder .mk.entry .dot { background: linear-gradient(135deg, #f5f9ff, #c7d2fe); transform: rotate(45deg); border-radius: 2px; width: 12px; height: 12px; box-shadow: 0 0 0 2px rgba(255,255,255,.15); }
+  .ladder .mk.entry .lbl .px { color: #e2e8f0; }
+
+  /* Live mark price marker — biggest glow */
+  .ladder .mk.mark { z-index: 5; }
+  .ladder .mk.mark .dot {
+    width: 15px; height: 15px;
+    background: radial-gradient(circle at 35% 35%, #fff 0%, #c7d2fe 60%, #818cf8 100%);
+    box-shadow: 0 0 18px 5px rgba(129,140,248,.55), 0 0 0 3px rgba(99,102,241,.45);
+    animation: livepulse 1.5s ease-in-out infinite;
+  }
+  .ladder .mk.mark .dot::after {
+    content:''; position:absolute; inset:-8px; border-radius:50%;
+    background: radial-gradient(circle, rgba(129,140,248,.4) 0%, transparent 70%);
+    animation: liveghost 2s ease-out infinite;
+  }
+  @keyframes livepulse {
+    0%,100% { box-shadow: 0 0 18px 5px rgba(129,140,248,.55), 0 0 0 3px rgba(99,102,241,.45); transform: scale(1); }
+    50%     { box-shadow: 0 0 28px 9px rgba(129,140,248,.75), 0 0 0 4px rgba(99,102,241,.6);  transform: scale(1.08); }
+  }
+  @keyframes liveghost {
+    0%   { opacity: .6; transform: scale(.5) }
+    100% { opacity: 0;  transform: scale(2)   }
+  }
+  .ladder .mk.mark .lbl .px { color: #fff; font-weight: 600; font-size: 13px; letter-spacing: 0.01em; }
+  .ladder .mk.mark .lbl .sub { color: #a5b4fc; font-weight: 600; font-size: 10px; }
+
+  /* TP markers — green pulse, intensity varies by index */
+  .ladder .mk.tp .dot {
+    width: 12px; height: 12px;
+    background: radial-gradient(circle, #34d399 0%, #059669 100%);
+    box-shadow: 0 0 0 2px rgba(16,185,129,.3);
+    animation: tppulse 2.4s ease-in-out infinite;
+  }
+  @keyframes tppulse {
+    0%,100% { box-shadow: 0 0 0 2px rgba(16,185,129,.3) }
+    50%     { box-shadow: 0 0 14px 4px rgba(16,185,129,.55), 0 0 0 3px rgba(16,185,129,.55) }
+  }
+  .ladder .mk.tp .lbl .px { color: #6ee7b7; font-weight: 500; }
+  .ladder .mk.tp .lbl .sub { color: #10b981; }
+
+  /* SL marker — red urgent pulse */
+  .ladder .mk.sl .dot {
+    width: 12px; height: 12px;
+    background: radial-gradient(circle, #fca5a5 0%, #b91c1c 100%);
+    animation: slpulse 1.8s ease-in-out infinite;
+  }
+  @keyframes slpulse {
+    0%,100% { box-shadow: 0 0 0 2px rgba(239,68,68,.4) }
+    50%     { box-shadow: 0 0 16px 6px rgba(239,68,68,.6), 0 0 0 3px rgba(239,68,68,.6) }
+  }
+  .ladder .mk.sl .lbl .px { color: #fca5a5; font-weight: 500; }
+
+  /* Distance line from mark to each target */
+  .ladder .conn {
+    position: absolute; top: 50%; height: 2px;
+    background: linear-gradient(90deg, rgba(129,140,248,.5), rgba(129,140,248,0));
+    transform: translateY(-50%); transition: left 1s cubic-bezier(.34,1.2,.4,1), width 1s cubic-bezier(.34,1.2,.4,1);
+    z-index: 1;
+  }
+  .ladder .conn.to-tp { background: linear-gradient(90deg, rgba(129,140,248,.6), rgba(52,211,153,.4)); }
+  .ladder .conn.to-sl { background: linear-gradient(90deg, rgba(239,68,68,.4), rgba(129,140,248,.6)); }
+
+  /* NO SL warning pill — small badge top-center of cell, away from markers */
+  .ladder .nosl-pill {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    padding: 6px 16px; border-radius: 999px;
+    background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.35);
+    color: #fca5a5; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.22em; text-transform: uppercase; white-space: nowrap;
+    animation: warnflash 2.2s ease-in-out infinite; z-index: 6;
+  }
+  @keyframes warnflash {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.35) }
+    50%     { box-shadow: 0 0 0 10px rgba(239,68,68,0) }
+  }
+
+  /* Range labels (axis endpoints) */
+  .ladder .axis { position: absolute; font-size: 9px; color: #475569; letter-spacing: .08em; line-height: 1.5; text-transform: uppercase; }
+  .ladder .axis.left { left: 14px; top: 50%; transform: translateY(-50%); text-align: right; }
+  .ladder .axis.right { right: 14px; top: 50%; transform: translateY(-50%); }
+  .ladder .axis > div:first-child { font-weight: 600; color: #64748b; }
+
+  /* Row container background */
+  tr.ladder-row td { background: linear-gradient(180deg, rgba(15,23,42,.4) 0%, rgba(15,23,42,.15) 100%); border-top: none !important; }
+  tr.primary-row td { border-bottom: none !important; }
+  tr.ladder-row { border-bottom: 1px solid rgba(30,41,59,.5); }
+
+  /* Conn lines (lives in stage) */
+  .ladder-stage .conn {
+    position: absolute; top: 50%; height: 2px;
+    transform: translateY(-50%); transition: left 1s cubic-bezier(.34,1.2,.4,1), width 1s cubic-bezier(.34,1.2,.4,1);
+    z-index: 1; pointer-events: none;
+  }
+  .ladder-stage .conn.to-tp { background: linear-gradient(90deg, rgba(129,140,248,.6), rgba(52,211,153,.4)); }
+  .ladder-stage .conn.to-sl { background: linear-gradient(90deg, rgba(239,68,68,.4), rgba(129,140,248,.6)); }
+</style>
+</head>
+<body class="text-slate-200">
+<div x-data="dashboard()" x-init="boot()" class="px-6 py-5 max-w-[1500px] mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-5">
+    <div>
+      <h1 class="text-2xl font-semibold bg-gradient-to-r from-violet-300 via-sky-300 to-emerald-300 bg-clip-text text-transparent">
+        MEXC Futures · Live Position Board
+      </h1>
+      <p class="text-xs text-slate-500 mt-1">
+        Polling tiap <span x-text="intervalSec"></span>s ·
+        <span :class="connected ? 'text-emerald-400' : 'text-red-400'">●</span>
+        <span x-text="connected ? 'connected' : 'disconnected'"></span>
+        · <span x-text="lastTs"></span>
+        · <span class="text-slate-600">latency <span x-text="latencyMs"></span>ms</span>
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button @click="intervalSec = 2; restart()" :class="intervalSec===2 ? 'bg-violet-600/40 ring-1 ring-violet-400/50' : 'bg-slate-700/40'" class="text-xs px-3 py-1.5 rounded-md hover:bg-violet-600/30">2s</button>
+      <button @click="intervalSec = 5; restart()" :class="intervalSec===5 ? 'bg-violet-600/40 ring-1 ring-violet-400/50' : 'bg-slate-700/40'" class="text-xs px-3 py-1.5 rounded-md hover:bg-violet-600/30">5s</button>
+      <button @click="intervalSec = 10; restart()" :class="intervalSec===10 ? 'bg-violet-600/40 ring-1 ring-violet-400/50' : 'bg-slate-700/40'" class="text-xs px-3 py-1.5 rounded-md hover:bg-violet-600/30">10s</button>
+      <button @click="paused = !paused" class="text-xs px-3 py-1.5 rounded-md bg-slate-700/40 hover:bg-slate-700/70">
+        <span x-text="paused ? '▶ Resume' : '⏸ Pause'"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-5">
+    <div class="glass rounded-xl p-3">
+      <div class="text-[10px] uppercase tracking-wider text-slate-500">Equity</div>
+      <div class="text-lg font-semibold num" x-text="fmt(account.equity, 4)"></div>
+      <div class="text-[10px] text-slate-500">USDT</div>
+    </div>
+    <div class="glass rounded-xl p-3">
+      <div class="text-[10px] uppercase tracking-wider text-slate-500">Available</div>
+      <div class="text-lg font-semibold num" x-text="fmt(account.available, 4)"></div>
+      <div class="text-[10px] text-slate-500">USDT</div>
+    </div>
+    <div class="glass rounded-xl p-3">
+      <div class="text-[10px] uppercase tracking-wider text-slate-500">Unrealized</div>
+      <div class="text-lg font-semibold num" :class="pnlClass(account.unrealized)" x-text="fmtSign(account.unrealized, 4)"></div>
+      <div class="text-[10px] text-slate-500">USDT</div>
+    </div>
+    <div class="glass rounded-xl p-3">
+      <div class="text-[10px] uppercase tracking-wider text-slate-500">Total PnL Net</div>
+      <div class="text-lg font-semibold num" :class="pnlClass(totals.pnl_net)" x-text="fmtSign(totals.pnl_net, 4)"></div>
+      <div class="text-[10px] text-slate-500">unreal + realised</div>
+    </div>
+    <div class="glass rounded-xl p-3">
+      <div class="text-[10px] uppercase tracking-wider text-slate-500">Total Notional</div>
+      <div class="text-lg font-semibold num" x-text="fmt(totals.notional, 2)"></div>
+      <div class="text-[10px] text-slate-500">USDT exposure</div>
+    </div>
+    <div class="glass rounded-xl p-3">
+      <div class="text-[10px] uppercase tracking-wider text-slate-500">Active Positions</div>
+      <div class="text-lg font-semibold num" x-text="totals.pos_count"></div>
+      <div class="text-[10px] text-slate-500">margin <span x-text="fmt(totals.margin, 3)"></span> USDT</div>
+    </div>
+  </div>
+
+  <!-- Table: 10 kolom kompak, tiap cell multi-line (data terkait digrup) -->
+  <div class="glass rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-900/50 text-slate-400 text-[10px] uppercase tracking-wider">
+        <tr>
+          <th class="px-3 py-3 text-left sortable" @click="sortBy('no')">#</th>
+          <th class="px-3 py-3 text-left sortable" @click="sortBy('coin')">Aset</th>
+          <th class="px-3 py-3 text-left sortable" @click="sortBy('side')">Side · Lev</th>
+          <th class="px-3 py-3 text-right sortable" @click="sortBy('price')">
+            <div>Mark Price</div>
+            <div class="text-slate-600 normal-case font-normal">entry · Δ%</div>
+          </th>
+          <th class="px-3 py-3 text-right sortable" @click="sortBy('pnl_pct_lev')">
+            <div>PnL</div>
+            <div class="text-slate-600 normal-case font-normal">USDT · % lev</div>
+          </th>
+          <th class="px-3 py-3 text-right sortable" @click="sortBy('margin')">
+            <div>Margin</div>
+            <div class="text-slate-600 normal-case font-normal">notional</div>
+          </th>
+          <th class="px-3 py-3 text-right sortable" @click="sortBy('tp_price')">
+            <div>TP</div>
+            <div class="text-slate-600 normal-case font-normal">Δ% · legs</div>
+          </th>
+          <th class="px-3 py-3 text-right sortable" @click="sortBy('sl_price')">
+            <div>SL</div>
+            <div class="text-slate-600 normal-case font-normal">Δ%</div>
+          </th>
+          <th class="px-3 py-3 text-right sortable" @click="sortBy('margin_ratio')">
+            <div>Mgn Ratio</div>
+            <div class="text-slate-600 normal-case font-normal">liq price</div>
+          </th>
+          <th class="px-3 py-3 text-right sortable" @click="sortBy('buffer_pct')">
+            <div>Buffer→Liq</div>
+            <div class="text-slate-600 normal-case font-normal">% to liquidation</div>
+          </th>
+        </tr>
+      </thead>
+      <template x-for="(p, i) in sortedPositions" :key="p.position_id">
+        <tbody class="border-t border-slate-800/60">
+          <tr class="primary-row hover:bg-slate-800/30 transition align-top" :class="changedRows.has(p.position_id) ? 'row-fade' : ''">
+            <td class="px-3 py-3 text-slate-500" x-text="i + 1"></td>
+
+            <!-- Aset: coin + symbol + open_type -->
+            <td class="px-3 py-3">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500/30 to-sky-500/30 flex items-center justify-center text-[10px] font-semibold ring-1 ring-violet-400/30 shrink-0" x-text="p.coin.slice(0,3)"></div>
+                <div class="leading-tight">
+                  <div class="font-medium" x-text="p.coin"></div>
+                  <div class="text-[10px] text-slate-500 font-mono" x-text="p.symbol"></div>
+                  <div class="text-[10px] text-slate-600" x-text="p.open_type"></div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Side · Lev -->
+            <td class="px-3 py-3 leading-tight">
+              <span :class="p.side==='LONG' ? 'bg-emerald-500/15 text-emerald-300 ring-emerald-400/30' : 'bg-rose-500/15 text-rose-300 ring-rose-400/30'" class="px-2 py-0.5 rounded-md ring-1 text-[11px] font-semibold" x-text="p.side"></span>
+              <div class="text-amber-300 font-semibold text-xs mt-1" x-text="p.lev + 'x'"></div>
+            </td>
+
+            <!-- Mark · entry · Δ% -->
+            <td class="px-3 py-3 text-right num leading-tight">
+              <div class="font-semibold" x-text="fmtPrice(p.price)"></div>
+              <div class="text-[10px] text-slate-500">entry <span x-text="fmtPrice(p.entry)"></span></div>
+              <div class="text-[11px]" :class="pnlClass(p.price_delta_pct)" x-text="fmtPct(p.price_delta_pct)"></div>
+            </td>
+
+            <!-- PnL USDT · % lev -->
+            <td class="px-3 py-3 text-right num leading-tight">
+              <div class="font-semibold" :class="pnlClass(p.pnl_usdt)" x-text="fmtSign(p.pnl_usdt, 4)"></div>
+              <div class="text-[10px] text-slate-500">USDT</div>
+              <div class="text-[11px] font-semibold" :class="pnlClass(p.pnl_pct_lev)" x-text="fmtPct(p.pnl_pct_lev) + ' lev'"></div>
+            </td>
+
+            <!-- Margin · notional -->
+            <td class="px-3 py-3 text-right num leading-tight text-slate-300">
+              <div x-text="fmt(p.margin, 4)"></div>
+              <div class="text-[10px] text-slate-500">margin</div>
+              <div class="text-[11px] text-slate-400">not <span x-text="fmt(p.notional, 2)"></span></div>
+            </td>
+
+            <!-- TP: price · dist% · legs -->
+            <td class="px-3 py-3 text-right num leading-tight">
+              <template x-if="p.tp_price">
+                <div>
+                  <div class="text-emerald-300 font-medium" x-text="fmtPrice(p.tp_price)"></div>
+                  <div class="text-[11px] text-emerald-400" x-text="fmtPct(p.tp_dist_pct)"></div>
+                  <div class="text-[10px] text-slate-500" x-show="p.tp_count > 1" x-text="p.tp_count + ' legs (max ' + fmtPrice(p.tp_price_farthest) + ')'"></div>
+                </div>
+              </template>
+              <template x-if="!p.tp_price">
+                <span class="text-slate-600">—</span>
+              </template>
+            </td>
+
+            <!-- SL: price · dist% · NO SL badge -->
+            <td class="px-3 py-3 text-right num leading-tight">
+              <template x-if="p.sl_price">
+                <div>
+                  <div class="text-rose-300 font-medium" x-text="fmtPrice(p.sl_price)"></div>
+                  <div class="text-[11px] text-rose-400" x-text="fmtPct(p.sl_dist_pct)"></div>
+                  <div class="text-[10px] text-slate-500" x-show="p.sl_count > 1" x-text="p.sl_count + ' legs'"></div>
+                </div>
+              </template>
+              <template x-if="!p.sl_price">
+                <div>
+                  <span class="px-2 py-0.5 rounded bg-rose-900/40 text-rose-300 ring-1 ring-rose-500/40 text-[10px] font-semibold whitespace-nowrap">⚠ NO SL</span>
+                  <div class="text-[10px] text-slate-600 mt-1">unprotected</div>
+                </div>
+              </template>
+            </td>
+
+            <!-- Mgn Ratio · Liq Price -->
+            <td class="px-3 py-3 text-right num leading-tight">
+              <div :class="mgnRatioClass(p.margin_ratio)" x-text="fmtPctPlain(p.margin_ratio)"></div>
+              <div class="text-[10px] text-slate-500">mgn ratio</div>
+              <div class="text-[11px] text-slate-400" x-text="p.liq_price ? ('liq ' + fmtPrice(p.liq_price)) : 'liq —'"></div>
+            </td>
+
+            <!-- Buffer→Liq with bar -->
+            <td class="px-3 py-3 text-right num leading-tight">
+              <template x-if="p.buffer_pct !== null">
+                <div>
+                  <div :class="bufferClass(p.buffer_pct)" class="font-semibold" x-text="fmtPctPlain(p.buffer_pct)"></div>
+                  <div class="bar mt-1">
+                    <i :style="'left:' + Math.min(Math.max(p.buffer_pct, 0), 100) + '%'"></i>
+                  </div>
+                  <div class="text-[10px] text-slate-600 mt-1">to liquidation</div>
+                </div>
+              </template>
+              <template x-if="p.buffer_pct === null">
+                <div>
+                  <span class="text-slate-600 text-xs">cross · shared</span>
+                  <div class="text-[10px] text-slate-600 mt-1">depends on equity</div>
+                </div>
+              </template>
+            </td>
+          </tr>
+          <!-- Ladder row: visualizer harga liq · entry · mark · TP · SL -->
+          <tr class="ladder-row">
+            <td colspan="10" class="px-3 pb-3">
+              <div class="ladder">
+                <!-- NO SL pill (top-center of cell, doesn't collide with markers) -->
+                <template x-if="!p.sl_price">
+                  <div class="nosl-pill">⚠ NO STOP LOSS</div>
+                </template>
+
+                <!-- Axis labels -->
+                <div class="axis left">
+                  <div x-text="p.side === 'LONG' ? 'LIQ' : 'TP_max'"></div>
+                  <div class="text-slate-600" x-text="fmtPrice(ladderRange(p).lo)"></div>
+                </div>
+                <div class="axis right">
+                  <div x-text="p.side === 'LONG' ? 'TP_max' : 'LIQ'"></div>
+                  <div class="text-slate-600" x-text="fmtPrice(ladderRange(p).hi)"></div>
+                </div>
+
+                <div class="ladder-stage">
+                  <div class="track"></div>
+
+                  <!-- Connection lines (mark ↔ nearest TP, mark ↔ SL) -->
+                  <template x-if="p.tp_price">
+                    <div class="conn to-tp" :style="connStyle(p, p.price, p.tp_price)"></div>
+                  </template>
+                  <template x-if="p.sl_price">
+                    <div class="conn to-sl" :style="connStyle(p, p.sl_price, p.price)"></div>
+                  </template>
+
+                  <!-- Liq marker -->
+                  <template x-if="p.liq_price">
+                    <div class="mk liq" :style="markerStyle(p, p.liq_price)">
+                      <div class="dot"></div>
+                      <div class="lbl below">
+                        <div class="px" x-text="fmtPrice(p.liq_price)"></div>
+                        <div class="sub">LIQ</div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- SL marker (if set) -->
+                  <template x-if="p.sl_price">
+                    <div class="mk sl" :style="markerStyle(p, p.sl_price)">
+                      <div class="dot"></div>
+                      <div class="lbl above">
+                        <div class="px" x-text="fmtPrice(p.sl_price)"></div>
+                        <div class="sub" x-text="'SL ' + fmtPct(p.sl_dist_pct)"></div>
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- Entry marker (hidden label if too close to mark) -->
+                  <div class="mk entry" :style="markerStyle(p, p.entry)">
+                    <div class="dot"></div>
+                    <div class="lbl below" x-show="!isCloseToMark(p, p.entry)">
+                      <div class="px" x-text="fmtPrice(p.entry)"></div>
+                      <div class="sub">ENTRY</div>
+                    </div>
+                  </div>
+
+                  <!-- LIVE Mark marker (always primary) -->
+                  <div class="mk mark" :style="markerStyle(p, p.price)">
+                    <div class="dot"></div>
+                    <div class="lbl above">
+                      <div class="px" x-text="fmtPrice(p.price)"></div>
+                      <div class="sub" :class="pnlClass(p.price_delta_pct)" x-text="fmtPct(p.price_delta_pct)"></div>
+                    </div>
+                  </div>
+
+                  <!-- TP markers (all legs) -->
+                  <template x-for="(tp, ti) in (p.tp_all || [])" :key="'tp-'+p.position_id+'-'+ti">
+                    <div class="mk tp" :style="markerStyle(p, tp)">
+                      <div class="dot"></div>
+                      <div class="lbl below">
+                        <div class="px" x-text="fmtPrice(tp)"></div>
+                        <div class="sub" x-text="'TP' + (ti + 1) + ' · ' + fmtPct(distPct(p, tp))"></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </template>
+      <tbody x-show="positions.length === 0">
+        <tr>
+          <td colspan="10" class="px-6 py-10 text-center text-slate-500">
+            <div class="text-3xl mb-2">📭</div>
+            Belum ada posisi aktif
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="text-[10px] text-slate-600 mt-3 text-right">
+    Data dari MEXC Futures API · DoH bypass · Sort: klik header kolom
+  </p>
+</div>
+
+<script>
+function dashboard() {
+  return {
+    intervalSec: 2,
+    paused: false,
+    connected: false,
+    latencyMs: 0,
+    lastTs: '—',
+    account: { equity: 0, available: 0, cash: 0, position_margin: 0, unrealized: 0, frozen: 0 },
+    totals: { pnl_unrealized: 0, pnl_realised: 0, pnl_net: 0, margin: 0, notional: 0, pos_count: 0 },
+    positions: [],
+    sortKey: 'pnl_pct_lev',
+    sortDir: 'desc',
+    timer: null,
+    changedRows: new Set(),
+    lastSnapshot: {},
+
+    async boot() { await this.tick(); this.restart(); },
+    restart() {
+      if (this.timer) clearInterval(this.timer);
+      this.timer = setInterval(() => { if (!this.paused) this.tick(); }, this.intervalSec * 1000);
+    },
+    async tick() {
+      try {
+        const r = await fetch('/api/snapshot', { cache: 'no-store' });
+        if (!r.ok) throw new Error('bad status ' + r.status);
+        const d = await r.json();
+        this.connected = true;
+        this.latencyMs = d.latency_ms;
+        this.lastTs = new Date(d.ts).toLocaleTimeString('id-ID');
+        this.account = d.account;
+        this.totals = d.totals;
+        // Detect changed positions for row fade
+        const newChanged = new Set();
+        for (const p of d.positions) {
+          const prev = this.lastSnapshot[p.position_id];
+          if (prev && (prev.price !== p.price || prev.pnl_usdt !== p.pnl_usdt)) newChanged.add(p.position_id);
+          this.lastSnapshot[p.position_id] = { ...p };
+        }
+        this.changedRows = newChanged;
+        this.positions = d.positions;
+        setTimeout(() => { this.changedRows = new Set(); }, 500);
+      } catch (e) {
+        this.connected = false;
+        console.error(e);
+      }
+    },
+    sortBy(k) {
+      if (this.sortKey === k) this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+      else { this.sortKey = k; this.sortDir = 'desc'; }
+    },
+    get sortedPositions() {
+      const k = this.sortKey, dir = this.sortDir === 'asc' ? 1 : -1;
+      return [...this.positions].sort((a, b) => {
+        const av = a[k], bv = b[k];
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        if (typeof av === 'string') return av.localeCompare(bv) * dir;
+        return (av - bv) * dir;
+      });
+    },
+    fmt(n, dp = 2) {
+      if (n == null || isNaN(n)) return '—';
+      return Number(n).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+    },
+    fmtSign(n, dp = 2) {
+      if (n == null || isNaN(n)) return '—';
+      const s = n > 0 ? '+' : '';
+      return s + this.fmt(n, dp);
+    },
+    fmtPct(n) {
+      if (n == null || isNaN(n)) return '—';
+      const s = n > 0 ? '+' : '';
+      return s + Number(n).toFixed(2) + '%';
+    },
+    fmtPrice(n) {
+      if (n == null) return '—';
+      const v = Math.abs(n);
+      const dp = v >= 1000 ? 2 : v >= 1 ? 4 : 6;
+      return this.fmt(n, dp);
+    },
+    pnlClass(n) { if (n > 0) return 'pnl-up'; if (n < 0) return 'pnl-down'; return 'pnl-zero'; },
+    bufferClass(n) { if (n < 10) return 'text-rose-400'; if (n < 25) return 'text-amber-400'; return 'text-emerald-400'; },
+    mgnRatioClass(n) { if (n > 50) return 'text-rose-400'; if (n > 20) return 'text-amber-400'; return 'text-slate-300'; },
+
+    // ════ Price ladder positioning ════
+    ladderRange(p) {
+      // Collect all reference prices
+      const prices = [p.entry, p.price];
+      if (p.liq_price) prices.push(p.liq_price);
+      if (p.sl_price) prices.push(p.sl_price);
+      if (p.tp_all && p.tp_all.length) prices.push(...p.tp_all);
+      const minP = Math.min(...prices);
+      const maxP = Math.max(...prices);
+      // Add padding (5% on each side of the price span)
+      const span = maxP - minP || maxP * 0.05;
+      const pad = span * 0.08;
+      // For LONG: lo = minP (bad/liq side), hi = maxP (good/TP side)
+      // For SHORT: lo = minP (good/TP side), hi = maxP (bad/liq side)
+      // We always display "bad" left → "good" right, so:
+      if (p.side === 'LONG') return { lo: minP - pad, hi: maxP + pad };
+      else                   return { lo: maxP + pad, hi: minP - pad }; // inverted
+    },
+
+    pricePct(p, price) {
+      // Returns 0–100% position from left of track
+      const { lo, hi } = this.ladderRange(p);
+      if (lo === hi) return 50;
+      let pct = ((price - lo) / (hi - lo)) * 100;
+      return Math.max(0, Math.min(100, pct));
+    },
+
+    markerStyle(p, price) {
+      return 'left: ' + this.pricePct(p, price).toFixed(2) + '%';
+    },
+
+    connStyle(p, fromPrice, toPrice) {
+      // A bar that spans from fromPrice% to toPrice%
+      const a = this.pricePct(p, fromPrice);
+      const b = this.pricePct(p, toPrice);
+      const left = Math.min(a, b);
+      const width = Math.abs(b - a);
+      return 'left: ' + left.toFixed(2) + '%; width: ' + width.toFixed(2) + '%';
+    },
+
+    distPct(p, targetPrice) {
+      if (!p.price) return 0;
+      const d = ((targetPrice - p.price) / p.price) * 100;
+      return p.side === 'LONG' ? d : -d;
+    },
+
+    isCloseToMark(p, price) {
+      // Hide entry label if dots overlap visually (< 4% of total range apart)
+      const a = this.pricePct(p, price);
+      const b = this.pricePct(p, p.price);
+      return Math.abs(a - b) < 4;
+    },
+
+    fmtPctPlain(n) {
+      // Margin ratio etc — never negative, no leading sign
+      if (n == null || isNaN(n)) return '—';
+      return Number(n).toFixed(2) + '%';
+    }
+  }
+}
+</script>
+</body>
+</html>

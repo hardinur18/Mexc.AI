@@ -19,6 +19,7 @@ const ACC_COLOR_TO_OKLCH: Record<string, string> = {
 };
 
 function secColor(c: string): string {
+  if (c?.startsWith("#")) return c;
   return ACC_COLOR_TO_OKLCH[c] ?? ACC_COLOR_TO_OKLCH.violet;
 }
 
@@ -26,18 +27,18 @@ interface PositionTableProps {
   positions: Position[];
 }
 
-const COLUMNS: Array<{ key: SortKey; label: string; sub?: string; align?: "left" | "right" }> = [
-  { key: "no", label: "#", align: "left" },
-  { key: "symbol", label: "Account", sub: "category", align: "left" },
-  { key: "coin", label: "Aset", align: "left" },
-  { key: "side", label: "Side · Lev", align: "left" },
-  { key: "price", label: "Mark Price", sub: "entry · Δ%", align: "right" },
-  { key: "pnl_pct_lev", label: "PnL", sub: "USDT · % lev", align: "right" },
-  { key: "margin", label: "Margin", sub: "notional", align: "right" },
-  { key: "tp_price", label: "TP", sub: "Δ% · legs", align: "right" },
-  { key: "sl_price", label: "SL", sub: "Δ%", align: "right" },
-  { key: "margin_ratio", label: "Mgn Ratio", sub: "liq price", align: "right" },
-  { key: "buffer_pct", label: "Buffer→Liq", sub: "% to liquidation", align: "right" },
+const COLUMNS: Array<{ key: SortKey; label: string; sub?: string; align?: "left" | "right"; width?: string }> = [
+  { key: "no", label: "#", align: "left", width: "w-[48px]" },
+  { key: "symbol", label: "Akun", sub: "kategori", align: "left", width: "w-[130px]" },
+  { key: "coin", label: "Aset", align: "left", width: "w-[160px]" },
+  { key: "side", label: "Arah / Lev", align: "left", width: "w-[110px]" },
+  { key: "price", label: "Harga Mark", sub: "entry / delta", align: "right", width: "w-[210px]" },
+  { key: "pnl_pct_lev", label: "PnL", sub: "USDT / % lev", align: "right", width: "w-[130px]" },
+  { key: "margin", label: "Margin", sub: "notional", align: "right", width: "w-[110px]" },
+  { key: "tp_price", label: "TP", sub: "delta / legs", align: "right", width: "w-[110px]" },
+  { key: "sl_price", label: "SL", sub: "delta", align: "right", width: "w-[100px]" },
+  { key: "margin_ratio", label: "Rasio Margin", sub: "harga likuidasi", align: "right", width: "w-[110px]" },
+  { key: "buffer_pct", label: "Jarak Likuidasi", sub: "% ke likuidasi", align: "right", width: "w-[140px]" },
 ];
 
 export function PositionTable({ positions }: PositionTableProps) {
@@ -132,6 +133,7 @@ export function PositionTable({ positions }: PositionTableProps) {
                     "px-3 py-3 cursor-pointer select-none transition hover:text-[var(--color-fg)]",
                     c.align === "right" ? "text-right" : "text-left",
                     isActive && "text-[var(--color-accent)]",
+                    c.width,
                   )}
                   onClick={() => setSort(c.key)}
                 >
@@ -287,3 +289,4 @@ export function PositionTable({ positions }: PositionTableProps) {
     </motion.div>
   );
 }
+

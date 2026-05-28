@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Card } from "@/components/ui/Card";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { pnlTone } from "@/lib/format";
 import type { Account, Totals, Position } from "@/types/position";
 import { motion, type Variants } from "motion/react";
 import { cn } from "@/lib/cn";
+import { Activity, Banknote, CircleDollarSign, Layers, TrendingUp, Wallet } from "lucide-react";
 
 interface StatCardsProps {
   account: Account;
@@ -30,10 +31,11 @@ export function StatCards({ account, totals, positions, ts }: StatCardsProps) {
       animate="show"
       className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-5"
     >
-      <Stat label="Equity" value={account.equity} decimals={2} sub="USDT" />
-      <Stat label="Saldo Dompet" value={account.cash} decimals={2} sub="USDT" />
+      <Stat icon={<CircleDollarSign size={14} />} label="Ekuitas" value={account.equity} decimals={2} sub="USDT" />
+      <Stat icon={<Wallet size={14} />} label="Saldo Dompet" value={account.cash} decimals={2} sub="USDT" />
       <Stat
-        label="Unrealized"
+        icon={<Activity size={14} />}
+        label="PnL Berjalan"
         value={account.unrealized}
         decimals={4}
         signed
@@ -41,18 +43,20 @@ export function StatCards({ account, totals, positions, ts }: StatCardsProps) {
         tone={pnlTone(account.unrealized)}
       />
       <Stat
-        label="Total PnL Net"
+        icon={<TrendingUp size={14} />}
+        label="Total PnL"
         value={totals.pnl_net}
         decimals={4}
         signed
-        sub="unreal + realised"
+        sub="berjalan + terealisasi"
         tone={pnlTone(totals.pnl_net)}
       />
       <Stat
+        icon={<Banknote size={14} />}
         label="Total Margin"
         value={totals.margin}
         decimals={3}
-        sub={`/ ${totals.notional.toFixed(0)} notional`}
+        sub={`/ ${totals.notional.toFixed(0)} nilai posisi`}
       />
       <motion.div variants={item}>
         <LongShortCard positions={positions} ts={ts} />
@@ -62,6 +66,7 @@ export function StatCards({ account, totals, positions, ts }: StatCardsProps) {
 }
 
 function Stat({
+  icon,
   label,
   value,
   decimals = 2,
@@ -69,6 +74,7 @@ function Stat({
   sub,
   tone = "zero",
 }: {
+  icon: ReactNode;
   label: string;
   value: number;
   decimals?: number;
@@ -86,8 +92,11 @@ function Stat({
   return (
     <motion.div variants={item}>
       <Card className="p-4 transition hover:ring-[var(--color-border-strong)] hover:translate-y-[-1px] hover:shadow-[var(--shadow-card)]">
-        <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium">
-          {label}
+        <div className="flex items-center gap-2">
+          <span className="ui-icon-chip h-7 w-7">{icon}</span>
+          <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-bold">
+            {label}
+          </div>
         </div>
         <div className={cn("text-lg font-semibold num mt-1.5", toneCls)}>
           <AnimatedNumber value={value} decimals={decimals} signed={signed} />
@@ -118,8 +127,11 @@ function LongShortCard({ positions, ts }: { positions: Position[]; ts: number })
   return (
     <Card className="p-4 transition hover:ring-[var(--color-border-strong)] hover:translate-y-[-1px] hover:shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between">
-        <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium">
-          Positions
+        <div className="flex items-center gap-2">
+          <span className="ui-icon-chip h-7 w-7"><Layers size={14} /></span>
+          <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-bold">
+            Posisi
+          </div>
         </div>
         <TimeAgo ts={ts} />
       </div>
@@ -167,7 +179,7 @@ function TimeAgo({ ts }: { ts: number }) {
   }, []);
   const diff = Math.max(0, now - ts);
   const sec = Math.floor(diff / 1000);
-  const text = sec < 60 ? `${sec}s ago` : `${Math.floor(sec / 60)}m ago`;
+  const text = sec < 60 ? `${sec}d lalu` : `${Math.floor(sec / 60)}m lalu`;
   return (
     <span className="text-[9px] text-[var(--color-fg-faint)] uppercase tracking-wider num">
       {text}

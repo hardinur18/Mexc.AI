@@ -41,8 +41,8 @@ export function Topbar({
                 <Activity size={15} />
               </div>
               <div className="min-w-0">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-fg-faint)]">
-                  Equity
+                <div className="ui-kicker">
+                  Ekuitas
                 </div>
                 <div className="flex min-w-0 items-baseline gap-1.5">
                   <AnimatedNumber
@@ -75,16 +75,22 @@ export function Topbar({
           )}
         </div>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex h-9 shrink-0 items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-1 shadow-[var(--shadow-soft)]">
           {onOpenCommandPalette && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" tone="default" onClick={onOpenCommandPalette} aria-label="Command palette">
+                <Button
+                  size="icon"
+                  tone="ghost"
+                  onClick={onOpenCommandPalette}
+                  aria-label="Command palette"
+                  className="h-7 w-7 rounded-[var(--radius-sm)] shadow-none ring-0"
+                >
                   <Command size={14} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-[11px]">
-                Cmd / K
+                Palet perintah
               </TooltipContent>
             </Tooltip>
           )}
@@ -93,17 +99,18 @@ export function Topbar({
             <AccountPicker
               summaries={snapshot?.accounts}
               onOpenSettings={onOpenSettings}
+              compact
             />
           </div>
 
-          <div className="hidden items-center gap-0.5 rounded-[var(--radius-md)] bg-[var(--color-surface)] p-1 ring-1 ring-[var(--color-border)] sm:flex">
+          <div className="hidden h-7 items-center gap-0.5 rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-bg-elev)] p-0.5 sm:flex">
             {intervals.map((iv) => (
               <button
                 key={iv}
                 type="button"
                 onClick={() => setIntervalSec(iv)}
                 className={cn(
-                  "h-7 min-w-8 rounded-[var(--radius-sm)] px-2 text-[10px] font-semibold transition",
+                  "h-6 min-w-7 rounded-[var(--radius-xs)] px-1.5 text-[11px] font-semibold leading-none transition",
                   intervalSec === iv
                     ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
                     : "text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-elev-2)] hover:text-[var(--color-fg)]",
@@ -116,18 +123,30 @@ export function Topbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" tone="default" aria-label="Status refresh" disabled>
+              <Button
+                size="icon"
+                tone="ghost"
+                aria-label="Status refresh"
+                disabled
+                className="h-7 w-7 rounded-[var(--radius-sm)] shadow-none ring-0"
+              >
                 <RefreshCw size={13} className={isFetching ? "animate-spin" : ""} />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-[11px]">
-              {isFetching ? "Refreshing" : "Idle"}
+              {isFetching ? "Memuat ulang" : "Siaga"}
             </TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" tone="default" onClick={togglePaused} aria-label="Jeda / Lanjut">
+              <Button
+                size="icon"
+                tone="ghost"
+                onClick={togglePaused}
+                aria-label="Jeda / Lanjut"
+                className="h-7 w-7 rounded-[var(--radius-sm)] shadow-none ring-0"
+              >
                 {paused ? <Play size={12} /> : <Pause size={12} />}
               </Button>
             </TooltipTrigger>
@@ -138,7 +157,13 @@ export function Topbar({
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="icon" tone="default" onClick={onOpenSettings} aria-label="Pengaturan">
+              <Button
+                size="icon"
+                tone="ghost"
+                onClick={onOpenSettings}
+                aria-label="Pengaturan"
+                className="h-7 w-7 rounded-[var(--radius-sm)] shadow-none ring-0"
+              >
                 <Settings size={13} />
               </Button>
             </TooltipTrigger>
@@ -188,15 +213,15 @@ function ConnectionDot({
       <TooltipContent side="bottom" className="text-[11px]">
         <div className="space-y-0.5">
           <div className="font-semibold">
-            {connected ? "Live" : isError ? "Disconnected" : "Loading"}
+            {connected ? "Live" : isError ? "Terputus" : "Memuat"}
           </div>
           {snapshot && (
             <>
               <div className="text-[var(--color-fg-subtle)]">
-                Polling {intervalSec}s / {paused ? "paused" : "active"}
+                Polling {intervalSec}s / {paused ? "jeda" : "aktif"}
               </div>
               <div className="text-[var(--color-fg-faint)]">
-                Latency {snapshot.latency_ms}ms
+                Latensi {snapshot.latency_ms}ms
               </div>
             </>
           )}

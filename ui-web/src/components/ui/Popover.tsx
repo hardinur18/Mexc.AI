@@ -15,7 +15,7 @@ export const PopoverContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-50 rounded-[var(--radius-md)] glass shadow-[var(--shadow-pop)] p-1.5 min-w-[220px]",
+        "z-50 page-panel p-1.5 min-w-[220px] shadow-[var(--shadow-pop)]",
         "data-[state=open]:animate-in data-[state=closed]:animate-out fade-in-0 fade-out-0 zoom-in-95",
         className,
       )}

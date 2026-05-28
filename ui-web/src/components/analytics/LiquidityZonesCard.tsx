@@ -20,18 +20,20 @@ export function LiquidityZonesCard({ zones, springUpthrust, currentPrice }: Prop
   }
 
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <Crosshair size={11} className="text-[var(--color-warning)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Liquidity Zones (4h)
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
-          drop-base-rally · spring/upthrust
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-warning)" }}>
+            <Crosshair size={13} />
+          </span>
+          <span className="ui-section-title">Liquidity Zones (4h)</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">
+          spring/upthrust
         </span>
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="px-4 py-4 space-y-3">
         {/* Wyckoff spring/upthrust */}
         {(hasSpring || hasUpthrust) && (
           <div className="space-y-1.5">

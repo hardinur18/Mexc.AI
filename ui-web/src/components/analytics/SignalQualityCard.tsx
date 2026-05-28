@@ -73,18 +73,20 @@ export function SignalQualityCard({
           : "var(--color-danger)";
 
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <ShieldCheck size={11} className="text-[var(--color-accent)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Signal Quality
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <ShieldCheck size={13} />
+          </span>
+          <span className="ui-section-title">Signal Quality</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">
           confirmation · flow · adjustments
         </span>
       </div>
 
-      <div className="p-4 space-y-2">
+      <div className="px-4 py-4 space-y-3">
         {/* Funding window warning */}
         {fundingWindow?.near_settlement && (
           <motion.div
@@ -229,10 +231,10 @@ export function SignalQualityCard({
         {/* Macro score adjustments breakdown */}
         {adjustments && adjustments.length > 0 && (
           <div>
-            <div className="text-[8px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
+            <div className="ui-section-title mb-2">
               Macro/flow adjustments ({adjustments.length})
             </div>
-            <div className="space-y-0.5">
+            <div className="ui-subcard overflow-hidden divide-y divide-[var(--color-border)]/30">
               {adjustments.map((adj, i) => {
                 const tone =
                   adj.score_delta < 0
@@ -243,14 +245,14 @@ export function SignalQualityCard({
                 return (
                   <div
                     key={i}
-                    className="flex items-center justify-between text-[9px] px-2 py-1 rounded bg-white/[0.02]"
+                    className="flex items-center justify-between text-[11px] px-3 py-2"
                   >
                     <span className="text-[var(--color-fg-muted)] truncate">{adj.name}</span>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[var(--color-fg-faint)] num text-[8px]">
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-[var(--color-fg-faint)] num text-[11px]">
                         {adj.value}
                       </span>
-                      <span className="num font-bold w-8 text-right" style={{ color: tone }}>
+                      <span className="num font-bold w-9 text-right" style={{ color: tone }}>
                         {adj.score_delta > 0 ? "+" : ""}
                         {adj.score_delta}
                       </span>

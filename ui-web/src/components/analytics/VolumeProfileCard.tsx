@@ -25,18 +25,18 @@ export function VolumeProfileCard({ data, currentPrice, height = 220 }: Props) {
   const range = hi - lo || 1;
 
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <BarChart3 size={11} className="text-[var(--color-accent)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Volume Profile
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
-          POC · VAH · VAL · HVN
-        </span>
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <BarChart3 size={13} />
+          </span>
+          <span className="ui-section-title">Volume Profile</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">POC · VAH · VAL · HVN</span>
       </div>
 
-      <div className="flex gap-2 p-4">
+      <div className="flex gap-2 px-4 py-4">
         {/* Histogram */}
         <div className="relative" style={{ width: 110, height }}>
           {bins.map((b, i) => {

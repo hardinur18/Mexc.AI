@@ -76,21 +76,24 @@ export function AnalysisCard({ symbol, patterns }: AnalysisCardProps) {
             : "var(--color-danger)";
 
   return (
-    <div className="rounded-[var(--radius-md)] inner-card px-3 py-3 space-y-3">
-      {/* Header: Confluence verdict */}
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] flex items-center gap-1.5">
-            <Sparkles size={11} />
-            Kekuatan Sinyal Beli Dip
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <Sparkles size={13} />
           </span>
-          <span
-            className="text-[10px] uppercase tracking-wider font-bold"
-            style={{ color: scoreTone }}
-          >
-            {verdict}
-          </span>
+          <span className="ui-section-title">Kekuatan Sinyal</span>
         </div>
+        <span
+          className="text-[11px] uppercase tracking-wider font-bold"
+          style={{ color: scoreTone }}
+        >
+          {verdict}
+        </span>
+      </div>
+
+      <div className="px-4 py-4 space-y-3">
+      <div>
         <div className="flex items-baseline gap-2 mb-2">
           <motion.span
             key={score}
@@ -397,6 +400,7 @@ export function AnalysisCard({ symbol, patterns }: AnalysisCardProps) {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
@@ -404,7 +408,7 @@ export function AnalysisCard({ symbol, patterns }: AnalysisCardProps) {
 function RsiCell({ label, value }: { label: string; value: number | null }) {
   if (value === null) {
     return (
-      <div className="rounded-[var(--radius-sm)] bg-white/[0.02] ring-1 ring-[var(--color-border)] px-1.5 py-1 flex items-center justify-between">
+      <div className="rounded-[var(--radius-sm)] [var(--color-surface)] ring-1 ring-[var(--color-border)] px-1.5 py-1 flex items-center justify-between">
         <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] font-bold">
           {label}
         </span>
@@ -459,7 +463,7 @@ function DiscountCell({
 }) {
   if (value === null) {
     return (
-      <div className="rounded-[var(--radius-sm)] bg-white/[0.02] ring-1 ring-[var(--color-border)] px-2 py-1.5">
+      <div className="rounded-[var(--radius-sm)] [var(--color-surface)] ring-1 ring-[var(--color-border)] px-2 py-1.5">
         <div className="text-[8px] uppercase tracking-wider text-[var(--color-fg-faint)]">
           {label}
         </div>
@@ -639,7 +643,7 @@ function MiniMetric({
         ? "var(--color-danger)"
         : "var(--color-fg-muted)";
   return (
-    <div className="rounded-[var(--radius-sm)] bg-white/[0.02] ring-1 ring-[var(--color-border)] px-2 py-1.5">
+    <div className="rounded-[var(--radius-sm)] [var(--color-surface)] ring-1 ring-[var(--color-border)] px-2 py-1.5">
       <div className="flex items-center justify-between">
         <span className="text-[8px] uppercase tracking-wider text-[var(--color-fg-subtle)] flex items-center gap-1">
           {icon && <span style={{ color: c }}>{icon}</span>}

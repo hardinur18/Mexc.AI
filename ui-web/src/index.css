@@ -88,8 +88,8 @@
   color-scheme: dark;
   font-family: var(--font-sans);
   font-feature-settings: "tnum", "cv11";
-  font-size: 13px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.45;
   color: var(--color-fg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -101,12 +101,12 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --color-bg: oklch(96% 0.004 260);
-  --color-bg-elev: oklch(100% 0 0);
-  --color-bg-elev-2: oklch(94% 0.006 260);
-  --color-surface: oklch(100% 0 0 / 0.8);
-  --color-border: oklch(85% 0.008 260 / 0.6);
-  --color-border-strong: oklch(75% 0.012 260 / 0.5);
+  --color-bg: oklch(95.5% 0.004 250);
+  --color-bg-elev: oklch(99% 0.001 250);
+  --color-bg-elev-2: oklch(96.5% 0.004 250);
+  --color-surface: oklch(98% 0.002 250 / 0.84);
+  --color-border: oklch(84% 0.007 250 / 0.76);
+  --color-border-strong: oklch(72% 0.011 250 / 0.68);
 
   --color-fg: oklch(18% 0.015 260);
   --color-fg-muted: oklch(35% 0.015 260);
@@ -128,9 +128,9 @@
   --color-long: oklch(45% 0.17 165);
   --color-short: oklch(50% 0.22 25);
 
-  --shadow-soft: 0 1px 3px oklch(0% 0 0 / 0.06), 0 0 0 1px oklch(0% 0 0 / 0.03);
-  --shadow-card: 0 2px 8px oklch(0% 0 0 / 0.06), 0 0 0 1px oklch(0% 0 0 / 0.04);
-  --shadow-pop: 0 8px 30px oklch(0% 0 0 / 0.1), 0 0 0 1px oklch(0% 0 0 / 0.04);
+  --shadow-soft: 0 1px 2px oklch(0% 0 0 / 0.045), 0 0 0 1px oklch(0% 0 0 / 0.025);
+  --shadow-card: 0 8px 22px oklch(0% 0 0 / 0.055), 0 0 0 1px oklch(0% 0 0 / 0.035);
+  --shadow-pop: 0 18px 46px oklch(0% 0 0 / 0.12), 0 0 0 1px oklch(0% 0 0 / 0.045);
 }
 
 body {
@@ -147,6 +147,32 @@ body {
   background:
     linear-gradient(180deg, oklch(98% 0.004 250), oklch(94.5% 0.006 250)),
     var(--color-bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+[role="button"] {
+  text-align: inherit;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th,
+td {
+  vertical-align: middle;
+}
+
+.ring-1 {
+  --tw-ring-color: var(--color-border);
 }
 
 body::before {
@@ -309,7 +335,7 @@ body::before {
 }
 
 .page-title {
-  font-size: var(--text-h3);
+  font-size: 22px;
   line-height: 1.15;
   font-weight: 750;
   letter-spacing: 0;
@@ -319,7 +345,7 @@ body::before {
 .page-description {
   margin-top: 4px;
   max-width: 680px;
-  font-size: var(--text-body);
+  font-size: 13px;
   color: var(--color-fg-subtle);
 }
 
@@ -329,29 +355,130 @@ body::before {
 }
 
 .data-table {
-  min-width: 1180px;
+  min-width: 1360px;
+  table-layout: fixed;
+}
+
+.data-table th {
+  height: 44px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.data-table td {
+  height: 64px;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 /* Inner card — used inside expanded details, dashboard panels */
 .inner-card {
-  background: var(--color-bg-elev-2);
+  background: color-mix(in oklch, var(--color-bg-elev-2) 86%, var(--color-bg-elev));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
 }
 
 /* Section header label — consistent uppercase label */
 .section-label {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: var(--color-fg-subtle);
 }
 
 /* Expanded detail panel background */
 .detail-panel {
-  background: var(--color-bg-elev-2);
+  background: color-mix(in oklch, var(--color-bg-elev-2) 82%, var(--color-bg));
   border-top: 1px solid var(--color-border);
+}
+
+.ui-panel-header {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in oklch, var(--color-bg-elev) 74%, var(--color-bg-elev-2));
+}
+
+.ui-section-title {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
+}
+
+.ui-icon-chip {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-fg-subtle);
+}
+
+.ui-subcard {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: color-mix(in oklch, var(--color-bg-elev) 72%, var(--color-bg-elev-2));
+  box-shadow: var(--shadow-soft);
+}
+
+.ui-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-fg-subtle);
+}
+
+.ui-body-muted {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-fg-muted);
+}
+
+.ui-meta {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--color-fg-faint);
+}
+
+/* Foundation guardrails for legacy components that still use tiny arbitrary utilities. */
+[class*="text-[8px]"],
+[class*="text-[9px]"] {
+  font-size: 10px !important;
+}
+
+[class*="text-[10px]"] {
+  font-size: 11px !important;
+}
+
+[class*="tracking-wider"] {
+  letter-spacing: 0.04em !important;
+}
+
+button svg,
+[role="button"] svg,
+.ui-icon-chip svg {
+  flex-shrink: 0;
+}
+
+:root[data-theme="light"] .inner-card,
+:root[data-theme="light"] .ui-subcard {
+  background: oklch(98.4% 0.002 250);
+}
+
+:root[data-theme="light"] .detail-panel {
+  background: oklch(95.5% 0.004 250);
 }
 
 /* ─── 2026 micro-interactions ─── */

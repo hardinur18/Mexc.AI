@@ -5,7 +5,6 @@ import { useAccounts } from "@/hooks/useSnapshot";
 import { useUiStore } from "@/store/ui";
 import { Button } from "@/components/ui/Button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover";
-import { Badge } from "@/components/ui/Badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/Tooltip";
 import { fmt, fmtSign } from "@/lib/format";
 import type { AccountMeta, AccountSummary } from "@/types/position";
@@ -25,9 +24,10 @@ const COLOR_TO_OKLCH: Record<string, string> = {
 interface AccountPickerProps {
   summaries?: AccountSummary[];
   onOpenSettings?: () => void;
+  compact?: boolean;
 }
 
-export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps) {
+export function AccountPicker({ summaries, onOpenSettings, compact }: AccountPickerProps) {
   const { data: accountsData, isLoading } = useAccounts();
   const accounts = accountsData?.accounts ?? [];
   const selected = useUiStore((s) => s.selectedAccounts);
@@ -53,12 +53,12 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
   const effectiveCount = touched ? selected.size : accounts.length;
   const triggerLabel =
     !touched || selected.size === accounts.length
-      ? `All accounts`
+      ? `Semua akun`
       : selected.size === 0
-        ? "No account"
+        ? "Tidak ada akun"
         : selected.size === 1
-          ? accounts.find((a) => a.id === Array.from(selected)[0])?.name || "1 selected"
-          : `${selected.size} selected`;
+          ? accounts.find((a) => a.id === Array.from(selected)[0])?.name || "1 dipilih"
+          : `${selected.size} dipilih`;
 
   const invertSelection = () => {
     const next = accounts
@@ -70,12 +70,23 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="sm" tone="default" className="gap-2 pr-2">
-          <Users size={14} />
-          <span>{triggerLabel}</span>
-          <Badge tone="accent" size="sm">
+        <Button
+          size="sm"
+          tone={compact ? "ghost" : "default"}
+          className={cn(
+            "min-w-0 gap-1.5",
+            compact
+              ? "h-7 rounded-[var(--radius-sm)] px-2 text-[12px] shadow-none ring-0"
+              : "gap-2 pr-2",
+          )}
+        >
+          <Users size={13} />
+          <span className={cn("truncate", compact ? "max-w-[98px]" : "max-w-[150px]")}>
+            {triggerLabel}
+          </span>
+          <span className="inline-flex h-5 min-w-6 items-center justify-center rounded-[var(--radius-xs)] bg-[var(--color-accent-soft)] px-1.5 text-[11px] font-bold leading-none text-[var(--color-accent)] ring-1 ring-[var(--color-accent)]/30">
             {effectiveCount}/{accounts.length}
-          </Badge>
+          </span>
           <ChevronDown size={12} className="opacity-60" />
         </Button>
       </PopoverTrigger>
@@ -84,7 +95,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
         <div className="px-3 pt-2.5 pb-2 border-b border-[var(--color-border)]">
           <div className="flex items-center justify-between mb-2">
             <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-              MEXC Accounts
+              Akun MEXC
             </div>
             <button
               type="button"
@@ -92,7 +103,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
               className="text-[10px] uppercase tracking-wider text-[var(--color-accent)] hover:underline flex items-center gap-1"
             >
               <Cog size={10} />
-              Manage
+              Kelola
             </button>
           </div>
 
@@ -105,7 +116,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
               />
               <input
                 type="text"
-                placeholder="Filter…"
+                placeholder="Cari akun..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-7 pr-2 py-1 text-[11px] rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none"
@@ -121,7 +132,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
               onClick={() => selectAllAccounts(accounts.map((a) => a.id))}
               className="h-6 px-2 text-[10px]"
             >
-              All
+              Semua
             </Button>
             <Button
               size="sm"
@@ -137,7 +148,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
               onClick={() => setSelectedAccounts([])}
               className="h-6 px-2 text-[10px]"
             >
-              None
+              Kosong
             </Button>
             <Button
               size="sm"
@@ -145,7 +156,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
               onClick={invertSelection}
               className="h-6 px-2 text-[10px]"
             >
-              Invert
+              Balik
             </Button>
           </div>
         </div>
@@ -153,13 +164,13 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
         <div className="max-h-[420px] overflow-y-auto py-1">
           {isLoading ? (
             <div className="text-[11px] text-[var(--color-fg-subtle)] px-3 py-3">
-              Loading…
+              Memuat...
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-[11px] text-[var(--color-fg-subtle)] px-3 py-3 text-center">
               {accounts.length === 0
-                ? "Belum ada akun. Klik Manage untuk add."
-                : "Tidak ada match."}
+                ? "Belum ada akun. Klik Kelola untuk menambah."
+                : "Tidak ada hasil."}
             </div>
           ) : (() => {
             // Group filtered by category
@@ -187,7 +198,9 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
               ...groups[cat].map((a) => {
               const checked = isSelected(a);
               const sum = summaries?.find((s) => s.id === a.id);
-              const dot = COLOR_TO_OKLCH[a.color] ?? COLOR_TO_OKLCH.violet;
+              const dot = a.color?.startsWith("#")
+                ? a.color
+                : COLOR_TO_OKLCH[a.color] ?? COLOR_TO_OKLCH.violet;
               return (
                 <button
                   key={a.id}
@@ -281,7 +294,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
             className="text-[var(--color-accent)] hover:underline flex items-center gap-1"
           >
             <Cog size={10} />
-            Add account
+            Tambah akun
           </button>
         </div>
       </PopoverContent>

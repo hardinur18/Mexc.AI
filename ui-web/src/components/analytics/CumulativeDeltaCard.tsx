@@ -18,17 +18,17 @@ export function CumulativeDeltaCard({ data }: Props) {
         : "var(--color-fg-muted)";
   const Icon = data.bias === "buy" ? ArrowUp : data.bias === "sell" ? ArrowDown : Activity;
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <Activity size={11} className="text-[var(--color-accent)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Cumulative Delta
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
-          last 100 trades flow
-        </span>
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <Activity size={13} />
+          </span>
+          <span className="ui-section-title">Cumulative Delta</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">last 100 trades flow</span>
       </div>
-      <div className="p-4">
+      <div className="px-4 py-4">
         <div className="flex items-baseline gap-2 mb-2">
           <Icon size={14} style={{ color: tone }} />
           <span className="text-base font-bold num leading-none" style={{ color: tone }}>

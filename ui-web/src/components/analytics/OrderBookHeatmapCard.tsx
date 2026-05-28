@@ -21,18 +21,18 @@ export function OrderBookHeatmapCard({ data }: Props) {
       : 50;
 
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <Layers3 size={11} className="text-[var(--color-accent)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Order Book Heatmap
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
-          walls · spread {data.spread_pct.toFixed(3)}%
-        </span>
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <Layers3 size={13} />
+          </span>
+          <span className="ui-section-title">Order Book Heatmap</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">walls · spread {data.spread_pct.toFixed(3)}%</span>
       </div>
 
-      <div className="p-2.5">
+      <div className="px-4 py-4">
         {/* Asks */}
         <div className="space-y-px mb-1">
           {asks.map((lv, i) => (

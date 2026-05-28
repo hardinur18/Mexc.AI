@@ -10,18 +10,18 @@ export function LiquidationClusterCard({ data }: Props) {
   if (!data) return null;
   if (!data.detected) {
     return (
-      <div className="rounded-[var(--radius-md)] inner-card px-3 py-2.5">
-        <div className="flex items-center gap-2">
-          <Bomb size={11} className="text-[var(--color-fg-muted)]" />
-          <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-            Liquidation Cluster
-          </span>
-          <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
-            tidak terdeteksi
-          </span>
+      <div className="inner-card overflow-hidden">
+        <div className="ui-panel-header px-4 py-2.5">
+          <div className="flex items-center gap-2.5">
+            <span className="ui-icon-chip" style={{ color: "var(--color-fg-muted)" }}>
+              <Bomb size={13} />
+            </span>
+            <span className="ui-section-title">Liquidation Cluster</span>
+          </div>
+          <span className="text-[11px] text-[var(--color-fg-faint)]">tidak terdeteksi</span>
         </div>
         {data.oi_surge_pct != null && (
-          <div className="text-[9px] text-[var(--color-fg-faint)] mt-1.5">
+          <div className="px-4 py-4 text-[9px] text-[var(--color-fg-faint)]">
             OI 5h:{" "}
             <span className="num text-[var(--color-fg-muted)]">
               {data.oi_surge_pct > 0 ? "+" : ""}
@@ -66,13 +66,17 @@ export function LiquidationClusterCard({ data }: Props) {
         boxShadow: `0 0 12px color-mix(in oklch, ${tone} 20%, transparent)`,
       }}
     >
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <AlertTriangle size={11} style={{ color: tone }} className="[animation:pulse-glow_2s_ease-in-out_infinite]" />
-        <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: tone }}>
-          {title}
-        </span>
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: tone }}>
+            <AlertTriangle size={13} className="[animation:pulse-glow_2s_ease-in-out_infinite]" />
+          </span>
+          <span className="text-[11px] uppercase tracking-wider font-bold" style={{ color: tone }}>
+            {title}
+          </span>
+        </div>
       </div>
-      <div className="p-4 space-y-2">
+      <div className="px-4 py-4 space-y-2">
         <div className="text-[10px] text-[var(--color-fg-muted)] leading-snug">{subtitle}</div>
         <div className="grid grid-cols-3 gap-2 text-[9px]">
           <Metric

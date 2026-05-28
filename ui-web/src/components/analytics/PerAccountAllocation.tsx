@@ -38,27 +38,29 @@ export function PerAccountAllocation({ plan, accounts, filterAccountIds }: Props
   const grandUsd = (totalEquity * totalTierPct) / 100;
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <Wallet size={11} className="text-[var(--color-accent)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Alokasi per akun
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
-          total {fmt(grandUsd, 2)} USDT across all tiers
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <Wallet size={13} />
+          </span>
+          <span className="ui-section-title">Alokasi per Akun</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">
+          total {fmt(grandUsd, 2)} USDT
         </span>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-[10px]">
+        <table className="w-full text-[11px]">
           <thead>
-            <tr className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] border-b border-[var(--color-border)]/40">
-              <th className="text-left px-3 py-1.5 font-semibold">Akun</th>
-              <th className="text-right px-2 py-1.5 font-semibold">Equity</th>
+            <tr className="text-[11px] uppercase tracking-wider text-[var(--color-fg-faint)] border-b border-[var(--color-border)]/40">
+              <th className="text-left px-4 py-2 font-semibold">Akun</th>
+              <th className="text-right px-3 py-2 font-semibold">Equity</th>
               {plan.tiers.map((t) => (
-                <th key={t.role} className="text-right px-2 py-1.5 font-semibold">
+                <th key={t.role} className="text-right px-3 py-2 font-semibold">
                   <span
-                    className="inline-block px-1 rounded text-[8px]"
+                    className="inline-block px-1.5 py-0.5 rounded text-[10px]"
                     style={{
                       color: TIER_TONE[t.role] || "var(--color-fg-muted)",
                       background: `color-mix(in oklch, ${TIER_TONE[t.role] || "var(--color-fg-muted)"} 12%, transparent)`,
@@ -66,12 +68,12 @@ export function PerAccountAllocation({ plan, accounts, filterAccountIds }: Props
                   >
                     {t.name}
                   </span>
-                  <div className="text-[8px] font-normal text-[var(--color-fg-faint)] normal-case mt-0.5">
+                  <div className="text-[10px] font-normal text-[var(--color-fg-faint)] normal-case mt-0.5">
                     {t.size_pct_equity}% · {t.lev}x
                   </div>
                 </th>
               ))}
-              <th className="text-right px-3 py-1.5 font-semibold">Total</th>
+              <th className="text-right px-4 py-2 font-semibold">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -86,35 +88,35 @@ export function PerAccountAllocation({ plan, accounts, filterAccountIds }: Props
                   initial={{ opacity: 0, x: -4 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.25, delay: i * 0.03 }}
-                  className="border-b border-[var(--color-border)]/20 hover:bg-white/[0.02]"
+                  className="border-b border-[var(--color-border)]/20 row-hover"
                 >
-                  <td className="px-3 py-1.5">
-                    <div className="flex items-center gap-1.5 min-w-0">
+                  <td className="px-4 py-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <span
-                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        className="w-2 h-2 rounded-full shrink-0"
                         style={{ background: `var(--color-${acc.color}, var(--color-accent))` }}
                       />
-                      <span className="font-semibold truncate max-w-[100px]">{acc.name}</span>
+                      <span className="font-semibold truncate max-w-[120px]">{acc.name}</span>
                     </div>
                   </td>
-                  <td className="text-right px-2 py-1.5 num text-[var(--color-fg-muted)]">
+                  <td className="text-right px-3 py-2 num text-[var(--color-fg-muted)]">
                     {fmt(acc.equity, 2)}
                   </td>
                   {plan.tiers!.map((t) => {
                     const usd = (acc.equity * t.size_pct_equity) / 100;
                     const notional = usd * t.lev;
                     return (
-                      <td key={t.role} className="text-right px-2 py-1.5 num leading-tight">
+                      <td key={t.role} className="text-right px-3 py-2 num leading-tight">
                         <div className="font-semibold" style={{ color: TIER_TONE[t.role] }}>
                           ${fmt(usd, 2)}
                         </div>
-                        <div className="text-[8px] text-[var(--color-fg-faint)]">
+                        <div className="text-[10px] text-[var(--color-fg-faint)]">
                           ${fmt(notional, 0)} not.
                         </div>
                       </td>
                     );
                   })}
-                  <td className="text-right px-3 py-1.5 num font-bold text-[var(--color-fg)]">
+                  <td className="text-right px-4 py-2 num font-bold text-[var(--color-fg)]">
                     ${fmt(rowTotal, 2)}
                   </td>
                 </motion.tr>

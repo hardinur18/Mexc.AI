@@ -62,6 +62,7 @@ const COLOR_TO_OKLCH: Record<string, string> = {
 };
 
 function accountColor(name: string | undefined): string {
+  if (name?.startsWith("#")) return name;
   return COLOR_TO_OKLCH[name ?? "violet"] ?? COLOR_TO_OKLCH.violet;
 }
 
@@ -121,7 +122,7 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
       onClick={onToggle}
     >
       {/* # + chevron */}
-      <td className="px-3 py-2.5 text-[var(--color-fg-faint)] text-xs w-[44px]">
+      <td className="w-[44px] px-3 py-2.5 text-[12px] text-[var(--color-fg-faint)]">
         <div className="flex items-center gap-1.5">
           <ChevronRight
             size={13}
@@ -142,11 +143,11 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
               className="inline-block w-2 h-2 rounded-full shrink-0"
               style={{ background: accountColor(p.account_color) }}
             />
-            <span className="text-sm font-medium truncate max-w-[100px]">
+            <span className="max-w-[110px] truncate text-[13px] font-semibold text-[var(--color-fg)]">
               {p.account_name}
             </span>
           </div>
-          <div className="text-[11px] text-[var(--color-fg-faint)] font-mono mt-0.5">
+          <div className="ui-meta mt-0.5 font-mono">
             {p.account_id}
           </div>
         </div>
@@ -158,7 +159,7 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
           <CoinIcon coin={p.coin} iconUrl={p.icon_url} size={28} />
           <div className="leading-tight min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold">{p.coin}</span>
+              <span className="text-[13px] font-bold text-[var(--color-fg)]">{p.coin}</span>
               <SignalBadge
                 score={p.signal_score}
                 verdict={p.signal_verdict}
@@ -169,10 +170,10 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
                 size="xs"
               />
             </div>
-            <div className="text-[11px] text-[var(--color-fg-subtle)] font-mono truncate">
+            <div className="ui-meta truncate font-mono text-[var(--color-fg-subtle)]">
               {p.symbol}
             </div>
-            <div className="text-[11px] text-[var(--color-fg-faint)]">{p.open_type}</div>
+            <div className="ui-meta">{p.open_type}</div>
           </div>
         </div>
       </td>
@@ -183,10 +184,10 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
           <Badge tone={p.side === "LONG" ? "long" : "short"} size="sm">
             {p.side}
           </Badge>
-          <span className="text-[var(--color-warning)] font-bold text-xs num">
+          <span className="num text-[12px] font-bold text-[var(--color-warning)]">
             {p.lev}x
           </span>
-          <span className="text-[9px] text-[var(--color-fg-faint)] uppercase tracking-wider">
+          <span className="ui-meta uppercase">
             {p.open_type.slice(0, 5)}
           </span>
         </div>
@@ -194,21 +195,23 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
 
       {/* Mark / Entry / Δ + 24h sparkline (bigger 95×30) */}
       <td className="px-3 py-2.5 leading-tight">
-        <div className="flex items-center justify-end gap-3">
-          <Sparkline
-            data={p.sparkline || []}
-            width={95}
-            height={30}
-            refPrice={p.entry}
-            markPrice={p.price}
-          />
-          <div className="text-right num">
+        <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+          <div className="flex justify-end">
+            <Sparkline
+              data={p.sparkline || []}
+              width={95}
+              height={30}
+              refPrice={p.entry}
+              markPrice={p.price}
+            />
+          </div>
+          <div className="text-right num w-[90px]">
             <AnimatedNumber
               value={p.price}
               format={(v) => fmtPrice(v)}
-              className="text-sm font-semibold block"
+              className="block text-[13px] font-semibold"
             />
-            <div className="text-[10px] flex items-center justify-end gap-1.5 mt-0.5">
+            <div className="mt-0.5 flex items-center justify-end gap-1.5 text-[11px]">
               <span className="text-[var(--color-fg-faint)]">{fmtPrice(p.entry)}</span>
               <AnimatedNumber
                 value={p.price_delta_pct}
@@ -226,12 +229,12 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
           value={p.pnl_unrealized}
           decimals={4}
           signed
-          className={cn("text-sm font-bold block", toneClass(pnlUnrealT))}
+          className={cn("block text-[13px] font-bold", toneClass(pnlUnrealT))}
         />
         <AnimatedNumber
           value={pnlPctUnrealLev}
           format={(v) => fmtPct(v)}
-          className={cn("text-[11px] font-semibold mt-0.5 block", toneClass(pnlUnrealLevT))}
+          className={cn("mt-0.5 block text-[11px] font-semibold", toneClass(pnlUnrealLevT))}
         />
         {Math.abs(p.pnl_realised) >= 0.5 && (
           <div
@@ -250,11 +253,11 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
 
       {/* Margin + Notional + risk cap warning */}
       <td className="px-3 py-2.5 text-right num leading-tight">
-        <div className="text-xs text-[var(--color-fg-muted)]">
+        <div className="text-[12px] font-semibold text-[var(--color-fg-muted)]">
           {fmt(p.margin, 3)}
         </div>
-        <div className="text-[11px] text-[var(--color-fg-faint)] mt-0.5">
-          {fmt(p.notional, 1)} not.
+        <div className="ui-meta mt-0.5">
+          {fmt(p.notional, 1)} nilai
         </div>
         {/* 5% equity cap warning — based on margin vs total margin across positions */}
       </td>
@@ -263,10 +266,10 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
       <td className="px-3 py-2.5 text-right num leading-tight">
         {p.tp_price ? (
           <>
-            <div className="text-sm text-[var(--color-success)] font-medium">
+            <div className="text-[13px] font-semibold text-[var(--color-success)]">
               {fmtPrice(p.tp_price)}
             </div>
-            <div className="text-[10px] text-[var(--color-success)] flex items-center justify-end gap-1 mt-0.5">
+            <div className="mt-0.5 flex items-center justify-end gap-1 text-[11px] text-[var(--color-success)]">
               {fmtPct(p.tp_dist_pct)}
               {p.tp_count > 1 && (
                 <span className="text-[var(--color-fg-faint)]">·{p.tp_count}</span>
@@ -282,10 +285,10 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
       <td className="px-3 py-2.5 text-right num leading-tight">
         {p.sl_price ? (
           <>
-            <div className="text-sm text-[var(--color-danger)] font-medium">
+            <div className="text-[13px] font-semibold text-[var(--color-danger)]">
               {fmtPrice(p.sl_price)}
             </div>
-            <div className="text-[10px] text-[var(--color-danger)] mt-0.5">
+            <div className="mt-0.5 text-[11px] text-[var(--color-danger)]">
               {fmtPct(p.sl_dist_pct)}
             </div>
           </>
@@ -298,10 +301,10 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
 
       {/* Mgn Ratio / Liq — 2 lines */}
       <td className="px-3 py-2.5 text-right num leading-tight">
-        <div className={cn("text-xs", toneClass(mgnT))}>
+        <div className={cn("text-[12px] font-semibold", toneClass(mgnT))}>
           {fmtPctPlain(p.margin_ratio)}
         </div>
-        <div className="text-[11px] text-[var(--color-fg-faint)] mt-0.5">
+        <div className="ui-meta mt-0.5">
           {p.liq_price ? fmtPrice(p.liq_price) : "shared"}
         </div>
       </td>
@@ -312,7 +315,7 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
           <div className="flex-1">
             {p.buffer_pct !== null ? (
               <>
-                <div className={cn("text-xs font-semibold", toneClass(buffT))}>
+                <div className={cn("text-[12px] font-semibold", toneClass(buffT))}>
                   {fmtPctPlain(p.buffer_pct)}
                 </div>
                 <div className="relative h-1 rounded-full mt-1 overflow-hidden bg-gradient-to-r from-[var(--color-danger)] via-[var(--color-warning)] to-[var(--color-success)]">
@@ -323,7 +326,7 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
                 </div>
               </>
             ) : (
-              <span className="text-[var(--color-fg-faint)] text-[10px] uppercase tracking-wider">
+              <span className="ui-meta uppercase">
                 cross-shared
               </span>
             )}

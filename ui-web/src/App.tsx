@@ -145,7 +145,7 @@ function PageContent({
       return (
         <div className="space-y-4">
           <div className="page-panel page-titlebar">
-            <PageHeader title="Sinyal" subtitle="Live signal monitoring & confluence scoring" />
+            <PageHeader title="Sinyal" subtitle="Pantauan sinyal live dan skor konfluensi" />
           </div>
           <div className="page-panel overflow-hidden">
             <SignalsPanelInner />
@@ -156,7 +156,7 @@ function PageContent({
       return (
         <div className="space-y-4">
           <div className="page-panel page-titlebar">
-            <PageHeader title="Cascade" subtitle="Multi-tier DCA pyramid orchestration" />
+            <PageHeader title="Rantai DCA" subtitle="Orkestrasi entry bertingkat dan rencana pyramid" />
           </div>
           <CascadePanel />
           <NarrativeHud />
@@ -166,7 +166,7 @@ function PageContent({
       return (
         <div className="space-y-4">
           <div className="page-panel page-titlebar">
-            <PageHeader title="Performance" subtitle="Win rate, profit factor & equity curve" />
+            <PageHeader title="Kinerja" subtitle="Win rate, profit factor, dan kurva ekuitas" />
           </div>
           <PerformanceDashboard />
           <PatternWinrateCard />
@@ -176,7 +176,7 @@ function PageContent({
       return (
         <div className="space-y-4">
           <div className="page-panel page-titlebar">
-            <PageHeader title="Risiko" subtitle="Portfolio heat, exposure & circuit breaker" />
+            <PageHeader title="Risiko" subtitle="Panas portofolio, exposure, dan circuit breaker" />
           </div>
           <PortfolioHeatCard />
           {snapshot.positions.length > 0 ? (
@@ -190,7 +190,7 @@ function PageContent({
       return (
         <div className="space-y-4">
           <div className="page-panel page-titlebar">
-            <PageHeader title="Akun" subtitle="Per-account allocation & equity breakdown" />
+            <PageHeader title="Akun" subtitle="Alokasi per akun dan rincian ekuitas" />
           </div>
           {snapshot.accounts.length > 0 ? (
             <AccountBreakdownInner accounts={snapshot.accounts} />
@@ -203,7 +203,7 @@ function PageContent({
       return (
         <div className="space-y-4">
           <div className="page-panel page-titlebar">
-            <PageHeader title="Riwayat" subtitle="Closed positions & historical P&L" />
+            <PageHeader title="Riwayat" subtitle="Posisi tertutup dan histori PnL" />
           </div>
           <div className="page-panel overflow-hidden">
             <ClosedPositionsPanelInner />
@@ -219,7 +219,7 @@ function DashboardPage({ snapshot }: { snapshot: Snapshot }) {
   return (
     <div className="space-y-4">
       <div className="page-panel page-titlebar flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <PageHeader title="Dashboard" subtitle="Real-time positions & market overview" />
+        <PageHeader title="Dasbor" subtitle="Ikhtisar posisi dan pasar secara real-time" />
         <MacroHud />
       </div>
       <StatCards

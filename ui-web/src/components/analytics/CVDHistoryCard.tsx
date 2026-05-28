@@ -48,18 +48,18 @@ export function CVDHistoryCard({ data }: Props) {
     : null;
 
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <Activity size={11} className="text-[var(--color-accent)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          CVD History
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
-          delta cumulative · {history.length} bars 1h
-        </span>
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <Activity size={13} />
+          </span>
+          <span className="ui-section-title">CVD History</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">delta cumulative · {history.length} bars 1h</span>
       </div>
 
-      <div className="p-4">
+      <div className="px-4 py-4">
         {/* Legend + axis labels */}
         <div className="flex items-center justify-between text-[9px] mb-1.5">
           <div className="flex items-center gap-3">

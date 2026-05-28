@@ -212,15 +212,15 @@ export function VerticalLadder({ p }: VerticalLadderProps) {
   }
 
   return (
-    <div className="rounded-[var(--radius-lg)] bg-[var(--color-bg-elev)] ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="inner-card overflow-hidden">
       {/* Header with analytical context */}
-      <div className="px-3 py-2.5 border-b border-[var(--color-border)]">
+      <div className="px-4 py-3 border-b border-[var(--color-border)]">
         <div className="flex items-center justify-between mb-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
+          <div className="flex items-center gap-2.5">
+            <span className="ui-section-title">
               Aksi Harga
             </span>
-            <span className="text-[10px] text-[var(--color-fg-faint)] font-mono">
+            <span className="text-[11px] text-[var(--color-fg-faint)] font-mono">
               · {p.symbol}
             </span>
           </div>
@@ -239,7 +239,7 @@ export function VerticalLadder({ p }: VerticalLadderProps) {
                   ? "var(--color-success-soft)"
                   : bias === "bearish"
                     ? "var(--color-danger-soft)"
-                    : "rgba(255,255,255,0.04)",
+                    : "var(--color-surface)",
               borderColor:
                 bias === "bullish"
                   ? "color-mix(in oklch, var(--color-success) 40%, transparent)"
@@ -452,7 +452,7 @@ function LevelRow({ lv, subtle = false }: { lv: Level; subtle?: boolean }) {
   const dashed = isDashed(lv.kind);
 
   return (
-    <div className="grid grid-cols-[20px_1fr_auto_72px] items-center gap-3 px-3 py-1.5 transition hover:bg-white/[0.02]">
+    <div className="grid grid-cols-[20px_1fr_auto_72px] items-center gap-3 px-3 py-1.5 transition row-hover">
       <div className="flex items-center justify-center">
         {dashed ? (
           <span

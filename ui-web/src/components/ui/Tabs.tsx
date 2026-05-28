@@ -26,7 +26,7 @@ export const TabsTrigger = React.forwardRef<
   <RT.Trigger
     ref={ref}
     className={cn(
-      "inline-flex min-h-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] px-3 py-1 text-xs font-medium transition",
+      "inline-flex min-h-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] px-3 py-1 text-[12px] font-semibold transition",
       "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]",
       "data-[state=active]:bg-[var(--color-accent-soft)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:ring-1 data-[state=active]:ring-[var(--color-accent)]/40",
       className,

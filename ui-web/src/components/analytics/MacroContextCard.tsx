@@ -40,20 +40,22 @@ export function MacroContextCard({ a }: Props) {
           : "var(--color-fg-muted)";
 
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <Globe size={11} className="text-[var(--color-accent)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Konteks Makro
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <Globe size={13} />
+          </span>
+          <span className="ui-section-title">Konteks Makro</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">
           posisi crowd & funding flow
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 p-4">
+      <div className="grid grid-cols-3 gap-3 px-4 py-4">
         {/* Long/Short Ratio */}
-        <div className="rounded-[var(--radius-sm)] bg-white/[0.03] px-2.5 py-2">
+        <div className="ui-subcard px-3 py-2.5">
           <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
             Long/Short
           </div>
@@ -103,7 +105,7 @@ export function MacroContextCard({ a }: Props) {
         </div>
 
         {/* Funding Now + 7d avg */}
-        <div className="rounded-[var(--radius-sm)] bg-white/[0.03] px-2.5 py-2">
+        <div className="ui-subcard px-2.5 py-2">
           <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
             Funding
           </div>
@@ -133,7 +135,7 @@ export function MacroContextCard({ a }: Props) {
         </div>
 
         {/* OI history sparkline */}
-        <div className="rounded-[var(--radius-sm)] bg-white/[0.03] px-2.5 py-2">
+        <div className="ui-subcard px-2.5 py-2">
           <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
             Open Interest
           </div>
@@ -159,8 +161,8 @@ export function MacroContextCard({ a }: Props) {
 
       {/* L/S history mini stack */}
       {lsrHist.length > 1 && (
-        <div className="px-3 pb-2.5">
-          <div className="text-[8px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
+        <div className="px-4 pb-3">
+          <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-faint)] font-medium mb-1.5">
             Tren long/short 7h terakhir
           </div>
           <div className="flex h-1.5 gap-px rounded-full overflow-hidden">

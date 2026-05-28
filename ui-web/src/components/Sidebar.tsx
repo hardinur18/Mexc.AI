@@ -27,10 +27,10 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", eyebrow: "Overview", icon: <LayoutDashboard size={17} /> },
+  { id: "dashboard", label: "Dasbor", eyebrow: "Ikhtisar", icon: <LayoutDashboard size={17} /> },
   { id: "signals", label: "Sinyal", eyebrow: "Confluence", icon: <Radar size={17} /> },
-  { id: "cascade", label: "Cascade", eyebrow: "DCA engine", icon: <Zap size={17} /> },
-  { id: "performance", label: "Performance", eyebrow: "Win rate", icon: <Award size={17} /> },
+  { id: "cascade", label: "Rantai DCA", eyebrow: "Eksekusi", icon: <Zap size={17} /> },
+  { id: "performance", label: "Kinerja", eyebrow: "Win rate", icon: <Award size={17} /> },
   { id: "risk", label: "Risiko", eyebrow: "Exposure", icon: <Shield size={17} /> },
   { id: "accounts", label: "Akun", eyebrow: "Allocation", icon: <Wallet size={17} /> },
   { id: "history", label: "Riwayat", eyebrow: "Closed PnL", icon: <History size={17} /> },
@@ -62,7 +62,7 @@ export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
                 MEXC Futures
               </div>
               <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--color-fg-faint)]">
-                Trading Console
+                Konsol Trading
               </div>
             </motion.div>
           )}
@@ -71,7 +71,7 @@ export function Sidebar({ onOpenSettings }: { onOpenSettings: () => void }) {
         <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden px-2 py-3">
           {!collapsed && (
             <div className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-fg-faint)]">
-              Workspace
+              Ruang Kerja
             </div>
           )}
           {NAV_ITEMS.map((item) => {

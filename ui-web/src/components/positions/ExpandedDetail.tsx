@@ -85,18 +85,18 @@ export function ExpandedDetail({ p }: ExpandedDetailProps) {
     ((analytics?.cvd_historical?.absorption?.detected ? 1 : 0));
 
   return (
-    <div className="detail-panel px-5 py-5">
+    <div className="detail-panel px-3 py-3 md:px-4 md:py-4">
       <Tabs defaultValue="entry">
-        <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
           <TabsList className="flex-wrap">
             <TabsTrigger value="entry">
-              <Target size={12} className="mr-1.5" /> Entry & Aksi
+              <Target size={12} className="mr-1.5" /> Entry
               {validPlan && (
                 <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse" />
               )}
             </TabsTrigger>
             <TabsTrigger value="technical">
-              <LineChart size={12} className="mr-1.5" /> Analisa Teknikal
+              <LineChart size={12} className="mr-1.5" /> Teknikal
               {patternCount > 0 && (
                 <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-accent)] text-[var(--color-bg)]">
                   {patternCount}
@@ -104,7 +104,7 @@ export function ExpandedDetail({ p }: ExpandedDetailProps) {
               )}
             </TabsTrigger>
             <TabsTrigger value="smc">
-              <Crosshair size={12} className="mr-1.5" /> Smart Money
+              <Crosshair size={12} className="mr-1.5" /> Alur Besar
               {smcAlertCount > 0 && (
                 <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-warning)] text-[var(--color-bg)]">
                   {smcAlertCount}
@@ -112,7 +112,7 @@ export function ExpandedDetail({ p }: ExpandedDetailProps) {
               )}
             </TabsTrigger>
             <TabsTrigger value="macro">
-              <Globe size={12} className="mr-1.5" /> Makro & Flow
+              <Globe size={12} className="mr-1.5" /> Makro
               {macroAlertCount > 0 && (
                 <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-danger)] text-[var(--color-bg)]">
                   {macroAlertCount}
@@ -120,10 +120,10 @@ export function ExpandedDetail({ p }: ExpandedDetailProps) {
               )}
             </TabsTrigger>
             <TabsTrigger value="vitals">
-              <Activity size={12} className="mr-1.5" /> Posisi Live
+              <Activity size={12} className="mr-1.5" /> Posisi
             </TabsTrigger>
           </TabsList>
-          <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)]">
+          <span className="rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-[var(--color-fg-faint)]">
             {p.symbol} · {p.account_name}
           </span>
         </div>
@@ -133,40 +133,39 @@ export function ExpandedDetail({ p }: ExpandedDetailProps) {
           <div className="space-y-3">
             {/* Hero row: MTF convergence + Pattern trigger */}
             {(analytics?.mtf_convergence || analytics?.primary_pattern_trigger) && (
-              <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-stretch gap-3 px-4 py-3 inner-card">
-                {analytics?.mtf_convergence ? (
-                  <MtfConvergenceRing
-                    data={analytics.mtf_convergence}
-                    direction={direction}
-                  />
-                ) : (
-                  <div />
-                )}
-                {analytics?.primary_pattern_trigger ? (
-                  <PatternTriggerBadge
-                    trigger={analytics.primary_pattern_trigger}
-                    direction={direction}
-                  />
-                ) : (
-                  <div className="text-[10px] text-[var(--color-fg-faint)] flex items-center">
-                    Belum ada candle pattern trigger
-                  </div>
-                )}
+              <div className="inner-card overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-stretch gap-3 px-3 py-2.5">
+                  {analytics?.mtf_convergence ? (
+                    <MtfConvergenceRing
+                      data={analytics.mtf_convergence}
+                      direction={direction}
+                    />
+                  ) : (
+                    <div />
+                  )}
+                  {analytics?.primary_pattern_trigger ? (
+                    <PatternTriggerBadge
+                      trigger={analytics.primary_pattern_trigger}
+                      direction={direction}
+                    />
+                  ) : (
+                    <div className="text-[11px] text-[var(--color-fg-faint)] flex items-center">
+                      Belum ada candle pattern trigger
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-3">
-              <EntryPlanCard
-                plan={analytics?.entry_plan}
-                verdict={analytics?.verdict ?? "—"}
-                score={analytics?.confluence_score ?? 0}
-                sizingPct={analytics?.sizing_pct_equity}
-                equityUsd={equityUsd}
-              />
-              <div className="space-y-3">
-                <ActionHints p={p} />
-              </div>
-            </div>
+            <ActionHints p={p} />
+
+            <EntryPlanCard
+              plan={analytics?.entry_plan}
+              verdict={analytics?.verdict ?? "—"}
+              score={analytics?.confluence_score ?? 0}
+              sizingPct={analytics?.sizing_pct_equity}
+              equityUsd={equityUsd}
+            />
 
             {/* Phase 14: Signal Quality (macro adj, vol confirm, grab, sweep 15m, funding window/arb, dynamic lev) */}
             <SignalQualityCard

@@ -31,18 +31,20 @@ export function MarketRegimeCard({ regime, btcAlignment, basis }: Props) {
     regime.regime.includes("up") ? TrendingUp : regime.regime.includes("down") ? TrendingDown : Minus;
 
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <Compass size={11} className="text-[var(--color-accent)]" />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Market Regime
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
-          trend × volatility × BTC alignment
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: "var(--color-accent)" }}>
+            <Compass size={13} />
+          </span>
+          <span className="ui-section-title">Market Regime</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">
+          trend × volatility × BTC
         </span>
       </div>
 
-      <div className="p-4 grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+      <div className="px-4 py-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
         {/* Regime */}
         <Tile
           icon={<RegimeIcon size={11} />}
@@ -132,18 +134,18 @@ function Tile({
   tone: string;
 }) {
   return (
-    <div className="rounded-[var(--radius-sm)] bg-white/[0.03] px-2.5 py-2">
-      <div className="flex items-center gap-1.5 text-[8px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
+    <div className="ui-subcard px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-[var(--color-fg-faint)] font-medium mb-1">
         <span style={{ color: tone }}>{icon}</span>
         {label}
       </div>
       <div
-        className="text-[11px] font-bold uppercase tracking-wide truncate"
+        className="text-[12px] font-bold uppercase tracking-wide truncate"
         style={{ color: tone }}
       >
         {value}
       </div>
-      <div className="text-[8px] text-[var(--color-fg-faint)] mt-0.5 truncate">{sub}</div>
+      <div className="text-[11px] text-[var(--color-fg-faint)] mt-0.5 truncate">{sub}</div>
     </div>
   );
 }

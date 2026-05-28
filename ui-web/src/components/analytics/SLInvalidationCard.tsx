@@ -28,46 +28,50 @@ export function SLInvalidationCard({ sl, rr, entryPrice, direction }: Props) {
   };
 
   return (
-    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
-      <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
-        <ShieldX size={11} style={{ color: tone }} />
-        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
-          Stop Loss + Risk:Reward
-        </span>
-        <span className="text-[9px] text-[var(--color-fg-faint)] ml-auto">
+    <div className="inner-card overflow-hidden">
+      <div className="ui-panel-header px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="ui-icon-chip" style={{ color: tone }}>
+            <ShieldX size={13} />
+          </span>
+          <span className="ui-section-title">Stop Loss + Risk:Reward</span>
+        </div>
+        <span className="text-[11px] text-[var(--color-fg-faint)]">
           invalidation + R-multiple
         </span>
       </div>
 
-      <div className="p-4 space-y-3">
+      <div className="px-4 py-4 space-y-3">
         {/* Stop Loss */}
-        <div className="rounded-[var(--radius-sm)] bg-white/[0.03] px-3 py-2">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[9px] uppercase tracking-wider text-[var(--color-danger)] font-bold flex items-center gap-1">
-              <AlertOctagon size={9} />
+        <div className="ui-subcard px-3.5 py-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11px] uppercase tracking-wider text-[var(--color-danger)] font-bold flex items-center gap-1.5">
+              <AlertOctagon size={11} />
               Invalidation Level
             </span>
-            <span className="text-[9px] num text-[var(--color-fg-faint)]">
+            <span className="text-[11px] num text-[var(--color-fg-faint)]">
               {sl.distance_pct?.toFixed(2)}% dari entry
             </span>
           </div>
-          <div className="flex items-baseline gap-2">
+          <div className="flex items-baseline gap-2.5">
             <motion.span
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4, ease: [0.34, 1.4, 0.4, 1] }}
-              className="text-lg font-bold num leading-none"
+              className="text-xl font-bold num leading-none"
               style={{ color: "var(--color-danger)" }}
             >
               {fmtPrice(sl.price)}
             </motion.span>
             {entryPrice != null && (
-              <span className="text-[9px] text-[var(--color-fg-faint)]">
-                vs entry <span className="num">{fmtPrice(entryPrice)}</span>
+              <span className="text-[11px] text-[var(--color-fg-faint)]">
+                vs entry <span className="num font-medium">{fmtPrice(entryPrice)}</span>
               </span>
             )}
           </div>
-          <div className="text-[9px] text-[var(--color-fg-muted)] mt-1">{sl.reason}</div>
+          {sl.reason && (
+            <div className="text-[11px] text-[var(--color-fg-muted)] mt-1.5">{sl.reason}</div>
+          )}
         </div>
 
         {/* R:R per TP */}
@@ -82,18 +86,18 @@ export function SLInvalidationCard({ sl, rr, entryPrice, direction }: Props) {
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: i * 0.05 }}
-              className="rounded-[var(--radius-sm)] bg-white/[0.03] px-2 py-2 text-center"
+              className="ui-subcard px-3 py-2.5 text-center"
             >
-              <div className="text-[8px] uppercase tracking-wider text-[var(--color-fg-faint)]">
+              <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-faint)] font-medium">
                 {t.label}
               </div>
               <div
-                className="text-base font-bold num mt-0.5"
+                className="text-lg font-bold num mt-1"
                 style={{ color: rrTone(t.r) }}
               >
                 {t.r != null ? `${t.r.toFixed(2)}R` : "—"}
               </div>
-              <div className="text-[8px] text-[var(--color-fg-faint)] mt-0.5">
+              <div className="text-[11px] text-[var(--color-fg-faint)] mt-0.5">
                 {t.r == null
                   ? ""
                   : t.r >= 3

@@ -4,7 +4,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden bg-white/[0.04] rounded-[var(--radius-sm)]",
+        "relative overflow-hidden bg-[var(--color-border)]/30 rounded-[var(--radius-sm)]",
         className,
       )}
     >

@@ -18,7 +18,7 @@ export function CumulativeDeltaCard({ data }: Props) {
         : "var(--color-fg-muted)";
   const Icon = data.bias === "buy" ? ArrowUp : data.bias === "sell" ? ArrowDown : Activity;
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Activity size={11} className="text-[var(--color-accent)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -28,20 +28,20 @@ export function CumulativeDeltaCard({ data }: Props) {
           last 100 trades flow
         </span>
       </div>
-      <div className="p-3">
+      <div className="p-4">
         <div className="flex items-baseline gap-2 mb-2">
           <Icon size={14} style={{ color: tone }} />
           <span className="text-base font-bold num leading-none" style={{ color: tone }}>
             {data.buy_pct.toFixed(0)}%
           </span>
-          <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)]">
+          <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)]">
             buy aggression
           </span>
           <span className="text-[9px] num text-[var(--color-fg-muted)] ml-auto">
             Δ {fmt(data.delta, 2)}
           </span>
         </div>
-        <div className="relative h-1.5 rounded-full overflow-hidden bg-white/5">
+        <div className="relative h-1.5 rounded-full overflow-hidden bg-[var(--color-surface)]">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${data.buy_pct}%` }}

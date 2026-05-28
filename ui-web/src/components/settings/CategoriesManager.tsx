@@ -69,7 +69,7 @@ export function CategoriesManager() {
               return (
                 <div
                   key={cat}
-                  className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] bg-black/20 ring-1 ring-[var(--color-border)] hover:ring-[var(--color-border-strong)] transition"
+                  className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-md)] bg-[var(--color-bg-elev)] ring-1 ring-[var(--color-border)] hover:ring-[var(--color-border-strong)] transition"
                 >
                   <div className="flex-1">
                     {isEditing ? (
@@ -89,14 +89,14 @@ export function CategoriesManager() {
                         }}
                         autoFocus
                         placeholder="new category name"
-                        className="w-full bg-black/30 ring-1 ring-[var(--color-accent)]/40 rounded-[var(--radius-sm)] px-2 py-1 text-[12px] font-mono text-[var(--color-fg)] outline-none focus:ring-[var(--color-accent)]"
+                        className="w-full bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-accent)]/40 rounded-[var(--radius-sm)] px-2 py-1 text-[12px] font-mono text-[var(--color-fg)] outline-none focus:ring-[var(--color-accent)]"
                       />
                     ) : (
                       <div className="flex items-center gap-2">
                         <span className="text-[12px] font-mono font-semibold text-[var(--color-fg)]">
                           {cat}
                         </span>
-                        <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] bg-white/5 px-1.5 py-0.5 rounded ring-1 ring-[var(--color-border)]">
+                        <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] bg-[var(--color-surface)] px-1.5 py-0.5 rounded ring-1 ring-[var(--color-border)]">
                           {count} account{count !== 1 ? "s" : ""}
                         </span>
                       </div>
@@ -166,7 +166,7 @@ export function CategoriesManager() {
           {suggestions.map((s) => (
             <span
               key={s}
-              className="text-[11px] font-mono px-2 py-1 rounded-[var(--radius-sm)] bg-white/5 ring-1 ring-[var(--color-border)] text-[var(--color-fg-muted)]"
+              className="text-[11px] font-mono px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-surface)] ring-1 ring-[var(--color-border)] text-[var(--color-fg-muted)]"
             >
               {s}
             </span>

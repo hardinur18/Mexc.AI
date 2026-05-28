@@ -113,9 +113,9 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.25 } }}
       transition={{ duration: 0.32, ease: [0.34, 1.4, 0.4, 1], delay: staggerDelay }}
       className={cn(
-        "group border-t border-[var(--color-border)] hover:bg-white/[0.025] transition cursor-pointer align-middle relative",
-        expanded && "bg-white/[0.025]",
-        isCursor && "ring-1 ring-inset ring-[var(--color-accent)]/40 bg-white/[0.03]",
+        "group border-t border-[var(--color-border)] row-hover transition cursor-pointer align-middle relative",
+        expanded && "bg-[var(--color-accent-soft)]/50",
+        isCursor && "ring-1 ring-inset ring-[var(--color-accent)]/40 bg-[var(--color-accent-soft)]/30",
         flashBg,
       )}
       onClick={onToggle}
@@ -146,7 +146,7 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
               {p.account_name}
             </span>
           </div>
-          <div className="text-[10px] text-[var(--color-fg-faint)] font-mono mt-0.5">
+          <div className="text-[11px] text-[var(--color-fg-faint)] font-mono mt-0.5">
             {p.account_id}
           </div>
         </div>
@@ -169,10 +169,10 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
                 size="xs"
               />
             </div>
-            <div className="text-[10px] text-[var(--color-fg-subtle)] font-mono truncate">
+            <div className="text-[11px] text-[var(--color-fg-subtle)] font-mono truncate">
               {p.symbol}
             </div>
-            <div className="text-[10px] text-[var(--color-fg-faint)]">{p.open_type}</div>
+            <div className="text-[11px] text-[var(--color-fg-faint)]">{p.open_type}</div>
           </div>
         </div>
       </td>
@@ -239,7 +239,7 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
               "text-[10px] mt-0.5 inline-flex items-center gap-0.5 px-1.5 rounded-[var(--radius-xs)] ring-1",
               p.pnl_realised > 0
                 ? "text-[var(--color-success)] bg-[var(--color-success-soft)] ring-[var(--color-success)]/30"
-                : "text-[var(--color-fg-muted)] bg-white/[0.03] ring-[var(--color-border)]",
+                : "text-[var(--color-fg-muted)] bg-[var(--color-surface)] ring-[var(--color-border)]",
             )}
             title={`Realised from partial TPs: ${fmtSign(p.pnl_realised, 4)} USDT`}
           >
@@ -253,7 +253,7 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
         <div className="text-xs text-[var(--color-fg-muted)]">
           {fmt(p.margin, 3)}
         </div>
-        <div className="text-[10px] text-[var(--color-fg-faint)] mt-0.5">
+        <div className="text-[11px] text-[var(--color-fg-faint)] mt-0.5">
           {fmt(p.notional, 1)} not.
         </div>
         {/* 5% equity cap warning — based on margin vs total margin across positions */}
@@ -301,7 +301,7 @@ export function PositionRow({ p, index, expanded, onToggle }: PositionRowProps) 
         <div className={cn("text-xs", toneClass(mgnT))}>
           {fmtPctPlain(p.margin_ratio)}
         </div>
-        <div className="text-[10px] text-[var(--color-fg-faint)] mt-0.5">
+        <div className="text-[11px] text-[var(--color-fg-faint)] mt-0.5">
           {p.liq_price ? fmtPrice(p.liq_price) : "shared"}
         </div>
       </td>
@@ -349,7 +349,7 @@ function RowKebab({ p }: { p: Position }) {
         <button
           type="button"
           onClick={(e) => e.stopPropagation()}
-          className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition w-6 h-6 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--color-fg-subtle)] hover:bg-white/10 hover:text-[var(--color-fg)]"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 transition w-6 h-6 rounded-[var(--radius-sm)] flex items-center justify-center text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-elev-2)] hover:text-[var(--color-fg)]"
           aria-label="Row actions"
         >
           <MoreHorizontal size={14} />
@@ -431,12 +431,12 @@ function ActionItem({
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-sm)] text-xs text-[var(--color-fg)] hover:bg-white/5 transition"
+      className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-sm)] text-xs text-[var(--color-fg)] hover:bg-[var(--color-bg-elev-2)] transition"
     >
       <span className="text-[var(--color-fg-subtle)] shrink-0">{icon}</span>
       <span className="flex-1 text-left">{label}</span>
       {hint && (
-        <span className="text-[10px] text-[var(--color-fg-faint)] font-mono truncate max-w-[80px]">
+        <span className="text-[11px] text-[var(--color-fg-faint)] font-mono truncate max-w-[80px]">
           {hint}
         </span>
       )}

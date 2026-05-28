@@ -145,7 +145,7 @@ function Badge({
       ? "bg-[var(--color-success-soft)] text-[var(--color-success)] ring-[var(--color-success)]/30"
       : tone === "danger"
         ? "bg-[var(--color-danger-soft)] text-[var(--color-danger)] ring-[var(--color-danger)]/40 [animation:pulse-glow_2s_ease-in-out_infinite]"
-        : "bg-white/5 text-[var(--color-fg-muted)] ring-[var(--color-border)]";
+        : "bg-[var(--color-surface)] text-[var(--color-fg-muted)] ring-[var(--color-border)]";
   return (
     <motion.span
       key={count}

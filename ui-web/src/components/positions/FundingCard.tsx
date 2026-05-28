@@ -27,7 +27,7 @@ export function FundingCard({ p }: FundingCardProps) {
   const f = p.funding;
   if (!f) {
     return (
-      <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-2.5">
+      <div className="rounded-[var(--radius-md)] inner-card px-3 py-2.5">
         <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] mb-1 flex items-center gap-1.5">
           <Clock size={11} />
           Funding
@@ -52,7 +52,7 @@ export function FundingCard({ p }: FundingCardProps) {
   const countdown = useCountdown(f.next_settle_ms);
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-2.5">
+    <div className="rounded-[var(--radius-md)] inner-card px-3 py-2.5">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] flex items-center gap-1.5">
           <Clock size={11} />

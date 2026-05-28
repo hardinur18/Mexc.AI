@@ -318,7 +318,7 @@ export function PriceChart({ p, height = 240, compact = false, analytics }: Pric
   if (!computed) {
     return (
       <div
-        className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-6 text-center text-[11px] text-[var(--color-fg-faint)]"
+        className="rounded-[var(--radius-md)] inner-card px-3 py-6 text-center text-[11px] text-[var(--color-fg-faint)]"
         style={{ height }}
       >
         Data 24 jam belum tersedia
@@ -347,7 +347,7 @@ export function PriceChart({ p, height = 240, compact = false, analytics }: Pric
   // ─── COMPACT MODE ───
   if (compact) {
     return (
-      <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+      <div className="rounded-[var(--radius-md)] inner-card overflow-hidden">
         <div className="px-3 py-1.5 flex items-center justify-between border-b border-[var(--color-border)]/50">
           <div className="flex items-center gap-2">
             <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -526,7 +526,7 @@ export function PriceChart({ p, height = 240, compact = false, analytics }: Pric
 
   // ─── FULL MODE (unchanged) ───
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center justify-between border-b border-[var(--color-border)]">
         <div className="flex items-center gap-2">
           <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">

@@ -172,13 +172,13 @@ export function AccountForm({ existing, onSuccess, onCancel }: AccountFormProps)
               onClick={() => setColor(c.id)}
               className={cn(
                 "w-6 h-6 rounded-full transition relative",
-                color === c.id ? "ring-2 ring-white scale-110" : "ring-1 ring-white/10 hover:scale-105",
+                color === c.id ? "ring-2 ring-white scale-110" : "ring-1 ring-[var(--color-border)] hover:scale-105",
               )}
               style={{ background: c.swatch }}
               aria-label={c.id}
             >
               {color === c.id && (
-                <Check size={12} className="absolute inset-0 m-auto text-white drop-shadow" />
+                <Check size={12} className="absolute inset-0 m-auto text-[var(--color-fg)] drop-shadow" />
               )}
             </button>
           ))}
@@ -200,7 +200,7 @@ export function AccountForm({ existing, onSuccess, onCancel }: AccountFormProps)
                 "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--radius-sm)] text-[11px] font-medium transition ring-1",
                 category === c
                   ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)] ring-[var(--color-accent)]/40"
-                  : "bg-white/[0.03] text-[var(--color-fg-muted)] ring-[var(--color-border)] hover:ring-[var(--color-border-strong)] hover:text-[var(--color-fg)]",
+                  : "bg-[var(--color-surface)] text-[var(--color-fg-muted)] ring-[var(--color-border)] hover:ring-[var(--color-border-strong)] hover:text-[var(--color-fg)]",
               )}
             >
               <Tag size={10} />
@@ -242,7 +242,7 @@ export function AccountForm({ existing, onSuccess, onCancel }: AccountFormProps)
                 }}
                 placeholder="e.g. hedge"
                 autoFocus
-                className="px-2 py-1 rounded-[var(--radius-sm)] bg-black/30 ring-1 ring-[var(--color-accent)]/40 focus:outline-none text-[11px] w-24"
+                className="px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-accent)]/40 focus:outline-none text-[11px] w-24"
               />
               <button
                 type="button"
@@ -374,7 +374,7 @@ export function AccountForm({ existing, onSuccess, onCancel }: AccountFormProps)
 }
 
 const inputCls =
-  "w-full px-2.5 py-1.5 rounded-[var(--radius-sm)] bg-black/30 ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none text-sm text-[var(--color-fg)] placeholder:text-[var(--color-fg-faint)] transition";
+  "w-full px-2.5 py-1.5 rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none text-sm text-[var(--color-fg)] placeholder:text-[var(--color-fg-faint)] transition";
 
 function Field({
   label,

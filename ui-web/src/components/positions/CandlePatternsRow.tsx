@@ -37,7 +37,7 @@ interface Props {
 export function CandlePatternsRow({ patterns }: Props) {
   if (!patterns || patterns.length === 0) {
     return (
-      <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-2 text-[10px] text-[var(--color-fg-faint)] flex items-center gap-1.5">
+      <div className="rounded-[var(--radius-md)] inner-card px-3 py-2 text-[10px] text-[var(--color-fg-faint)] flex items-center gap-1.5">
         <Circle size={10} />
         Tidak ada pola candle penting di MTF
       </div>
@@ -45,7 +45,7 @@ export function CandlePatternsRow({ patterns }: Props) {
   }
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-2.5 space-y-1.5">
+    <div className="rounded-[var(--radius-md)] inner-card px-3 py-2.5 space-y-1.5">
       <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
         Pola Candle Multi-TF ({patterns.length})
       </div>

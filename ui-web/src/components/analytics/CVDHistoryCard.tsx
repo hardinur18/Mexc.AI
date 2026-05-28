@@ -48,7 +48,7 @@ export function CVDHistoryCard({ data }: Props) {
     : null;
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Activity size={11} className="text-[var(--color-accent)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -59,7 +59,7 @@ export function CVDHistoryCard({ data }: Props) {
         </span>
       </div>
 
-      <div className="p-3">
+      <div className="p-4">
         {/* Legend + axis labels */}
         <div className="flex items-center justify-between text-[9px] mb-1.5">
           <div className="flex items-center gap-3">
@@ -76,7 +76,7 @@ export function CVDHistoryCard({ data }: Props) {
         </div>
 
         {/* Chart */}
-        <div className="relative bg-black/30 rounded-[var(--radius-sm)] ring-1 ring-[var(--color-border)]/40 overflow-hidden">
+        <div className="relative bg-[var(--color-bg-elev-2)] rounded-[var(--radius-sm)] ring-1 ring-[var(--color-border)]/40 overflow-hidden">
           <svg
             width="100%"
             height="130"

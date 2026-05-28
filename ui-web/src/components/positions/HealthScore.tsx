@@ -181,7 +181,7 @@ export function HealthScore({ p }: HealthScoreProps) {
   const offset = circ * (1 - score / 100);
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-3 flex flex-col gap-2">
+    <div className="rounded-[var(--radius-md)] inner-card px-3 py-3 flex flex-col gap-2">
       <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] flex items-center justify-between">
         <span>Health Score</span>
         <span className="font-bold" style={{ color: tierColor }}>
@@ -250,7 +250,7 @@ export function HealthScore({ p }: HealthScoreProps) {
                     <span className="opacity-50">/{f.weight}</span>
                   </span>
                 </div>
-                <div className="relative h-0.5 mt-0.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="relative h-0.5 mt-0.5 bg-[var(--color-surface)] rounded-full overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}

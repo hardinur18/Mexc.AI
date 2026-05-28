@@ -19,7 +19,7 @@ export function CoinIcon({ coin, iconUrl, size = 32, className }: CoinIconProps)
   return (
     <div
       className={cn(
-        "relative shrink-0 rounded-full overflow-hidden ring-1 ring-white/10 bg-gradient-to-br from-[var(--color-accent-soft)] to-[var(--color-info)]/30 flex items-center justify-center",
+        "relative shrink-0 rounded-full overflow-hidden ring-1 ring-[var(--color-border)] bg-gradient-to-br from-[var(--color-accent-soft)] to-[var(--color-info)]/30 flex items-center justify-center",
         className,
       )}
       style={{ width: size, height: size }}

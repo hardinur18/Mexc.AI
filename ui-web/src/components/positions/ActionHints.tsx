@@ -90,7 +90,7 @@ export function ActionHints({ p }: ActionHintsProps) {
 
   if (hints.length === 0) {
     return (
-      <div className="text-xs text-[var(--color-fg-subtle)] px-3 py-2 rounded-[var(--radius-md)] bg-black/20 ring-1 ring-[var(--color-border)]">
+      <div className="text-xs text-[var(--color-fg-subtle)] px-3 py-2 rounded-[var(--radius-md)] inner-card">
         <Info size={12} className="inline mr-1" />
         Posisi dalam status normal — tidak ada hint aktif.
       </div>

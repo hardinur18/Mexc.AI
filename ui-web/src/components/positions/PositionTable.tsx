@@ -93,7 +93,7 @@ export function PositionTable({ positions }: PositionTableProps) {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.34, 1.4, 0.4, 1] }}
-        className="glass rounded-[var(--radius-xl)] p-12 text-center"
+      className="page-panel p-12 text-center"
       >
         <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[var(--color-accent-soft)] ring-1 ring-[var(--color-accent)]/30 flex items-center justify-center">
           <motion.div
@@ -117,10 +117,11 @@ export function PositionTable({ positions }: PositionTableProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.34, 1.4, 0.4, 1], delay: 0.2 }}
-      className="glass rounded-[var(--radius-xl)] overflow-hidden"
+      className="page-panel overflow-hidden"
     >
-      <table className="w-full text-sm">
-        <thead className="bg-black/30 text-[var(--color-fg-subtle)] text-[10px] uppercase tracking-wider">
+      <div className="data-table-scroll">
+      <table className="data-table w-full text-sm">
+        <thead className="bg-[var(--color-bg-elev-2)] text-[var(--color-fg-subtle)] text-[11px] uppercase tracking-wider font-medium">
           <tr>
             {COLUMNS.map((c) => {
               const isActive = sortKey === c.key;
@@ -163,7 +164,7 @@ export function PositionTable({ positions }: PositionTableProps) {
             {groupByAccount && sections
               ? sections.flatMap((sec, secIdx) => {
                   const sectionRows: React.ReactNode[] = [
-                    <tr key={`hdr-${sec.account_id}`} className="bg-white/[0.02]">
+                    <tr key={`hdr-${sec.account_id}`} className="bg-[var(--color-bg-elev-2)]/50">
                       <td
                         colSpan={COLUMNS.length}
                         className="px-3 py-2 border-t border-[var(--color-border)]"
@@ -180,7 +181,7 @@ export function PositionTable({ positions }: PositionTableProps) {
                             <span className="text-[10px] text-[var(--color-fg-faint)] font-mono">
                               {sec.account_id}
                             </span>
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-[var(--color-fg-muted)] uppercase tracking-wider font-semibold">
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-[var(--color-surface)] text-[var(--color-fg-muted)] uppercase tracking-wider font-semibold ring-1 ring-[var(--color-border)]">
                               {sec.items.length} pos
                             </span>
                           </div>
@@ -282,6 +283,7 @@ export function PositionTable({ positions }: PositionTableProps) {
           </AnimatePresence>
         </tbody>
       </table>
+      </div>
     </motion.div>
   );
 }

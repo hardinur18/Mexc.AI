@@ -10,7 +10,7 @@ export function LiquidationClusterCard({ data }: Props) {
   if (!data) return null;
   if (!data.detected) {
     return (
-      <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-2.5">
+      <div className="rounded-[var(--radius-md)] inner-card px-3 py-2.5">
         <div className="flex items-center gap-2">
           <Bomb size={11} className="text-[var(--color-fg-muted)]" />
           <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -72,7 +72,7 @@ export function LiquidationClusterCard({ data }: Props) {
           {title}
         </span>
       </div>
-      <div className="p-3 space-y-2">
+      <div className="p-4 space-y-2">
         <div className="text-[10px] text-[var(--color-fg-muted)] leading-snug">{subtitle}</div>
         <div className="grid grid-cols-3 gap-2 text-[9px]">
           <Metric

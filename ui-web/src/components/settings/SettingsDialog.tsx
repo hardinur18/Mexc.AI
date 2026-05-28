@@ -177,7 +177,7 @@ function ListView({
           {accounts.map((a) => (
             <div
               key={a.id}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] hover:ring-[var(--color-border-strong)] transition"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] hover:ring-[var(--color-border-strong)] transition"
             >
               <div
                 className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -186,7 +186,7 @@ function ListView({
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium truncate flex items-center gap-1.5">
                   {a.name}
-                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/5 text-[var(--color-fg-muted)] ring-1 ring-[var(--color-border)] font-semibold">
+                  <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[var(--color-surface)] text-[var(--color-fg-muted)] ring-1 ring-[var(--color-border)] font-semibold">
                     {a.category}
                   </span>
                 </div>

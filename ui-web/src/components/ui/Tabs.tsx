@@ -11,7 +11,7 @@ export const TabsList = React.forwardRef<
   <RT.List
     ref={ref}
     className={cn(
-      "inline-flex items-center gap-1 rounded-[var(--radius-md)] bg-white/5 p-1 ring-1 ring-[var(--color-border)]",
+      "inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-bg-elev-2)] p-1 ring-1 ring-[var(--color-border)]",
       className,
     )}
     {...props}
@@ -26,7 +26,7 @@ export const TabsTrigger = React.forwardRef<
   <RT.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center rounded-[var(--radius-sm)] px-3 py-1 text-xs font-medium transition",
+      "inline-flex min-h-8 shrink-0 items-center justify-center rounded-[var(--radius-sm)] px-3 py-1 text-xs font-medium transition",
       "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]",
       "data-[state=active]:bg-[var(--color-accent-soft)] data-[state=active]:text-[var(--color-accent)] data-[state=active]:ring-1 data-[state=active]:ring-[var(--color-accent)]/40",
       className,

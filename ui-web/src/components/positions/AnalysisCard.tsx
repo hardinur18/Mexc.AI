@@ -55,7 +55,7 @@ export function AnalysisCard({ symbol, patterns }: AnalysisCardProps) {
 
   if (isLoading || !data) {
     return (
-      <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-4 flex items-center justify-center gap-2 text-[11px] text-[var(--color-fg-subtle)]">
+      <div className="rounded-[var(--radius-md)] inner-card px-3 py-4 flex items-center justify-center gap-2 text-[11px] text-[var(--color-fg-subtle)]">
         <Loader2 size={12} className="animate-spin" />
         Computing multi-TF analysis…
       </div>
@@ -76,7 +76,7 @@ export function AnalysisCard({ symbol, patterns }: AnalysisCardProps) {
             : "var(--color-danger)";
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-3 space-y-3">
+    <div className="rounded-[var(--radius-md)] inner-card px-3 py-3 space-y-3">
       {/* Header: Confluence verdict */}
       <div>
         <div className="flex items-center justify-between mb-1">
@@ -104,7 +104,7 @@ export function AnalysisCard({ symbol, patterns }: AnalysisCardProps) {
           </motion.span>
           <span className="text-[10px] text-[var(--color-fg-subtle)]">/ 100</span>
         </div>
-        <div className="relative h-1.5 rounded-full bg-white/5 overflow-hidden">
+        <div className="relative h-1.5 rounded-full bg-[var(--color-surface)] overflow-hidden">
           <div
             className="absolute top-0 bottom-0 w-px bg-[var(--color-warning)]/40"
             style={{ left: "60%" }}

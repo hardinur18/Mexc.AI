@@ -20,7 +20,7 @@ export function LiquidityZonesCard({ zones, springUpthrust, currentPrice }: Prop
   }
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Crosshair size={11} className="text-[var(--color-warning)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -31,7 +31,7 @@ export function LiquidityZonesCard({ zones, springUpthrust, currentPrice }: Prop
         </span>
       </div>
 
-      <div className="p-3 space-y-3">
+      <div className="p-4 space-y-3">
         {/* Wyckoff spring/upthrust */}
         {(hasSpring || hasUpthrust) && (
           <div className="space-y-1.5">
@@ -61,7 +61,7 @@ export function LiquidityZonesCard({ zones, springUpthrust, currentPrice }: Prop
         {/* Demand zones */}
         {demand.length > 0 && (
           <div>
-            <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1.5">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1.5">
               <ArrowUpRight size={9} className="text-[var(--color-success)]" />
               Demand Zone (support institusional)
             </div>
@@ -81,7 +81,7 @@ export function LiquidityZonesCard({ zones, springUpthrust, currentPrice }: Prop
         {/* Supply zones */}
         {supply.length > 0 && (
           <div>
-            <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1.5">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1.5">
               <ArrowDownRight size={9} className="text-[var(--color-danger)]" />
               Supply Zone (resistance institusional)
             </div>

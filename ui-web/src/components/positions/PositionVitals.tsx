@@ -21,9 +21,9 @@ export function PnlBreakdown({ p }: { p: Position }) {
   const roiUnreal = p.margin > 0 ? (p.pnl_unrealized / p.margin) * 100 : 0;
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-3">
+    <div className="rounded-[var(--radius-md)] inner-card px-4 py-3.5">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] flex items-center gap-1.5">
+        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium flex items-center gap-1.5">
           <TrendIcon size={11} style={{ color: tone }} />
           Unrealized P&L
           <span className="text-[var(--color-fg-faint)] normal-case font-normal">(live)</span>
@@ -64,7 +64,7 @@ export function PnlBreakdown({ p }: { p: Position }) {
           >
             {fmtSign(p.pnl_realised, 4)}
           </div>
-          <div className="text-[9px] text-[var(--color-fg-faint)]">
+          <div className="text-[10px] text-[var(--color-fg-faint)]">
             partial TPs + fees
           </div>
         </div>
@@ -85,7 +85,7 @@ export function PnlBreakdown({ p }: { p: Position }) {
           >
             {fmtSign(p.pnl_usdt, 4)}
           </div>
-          <div className="text-[9px] text-[var(--color-fg-faint)]">
+          <div className="text-[10px] text-[var(--color-fg-faint)]">
             unreal + realised
           </div>
         </div>
@@ -106,7 +106,7 @@ export function PnlBreakdown({ p }: { p: Position }) {
           >
             {fmtPct(p.pnl_pct_lev)}
           </div>
-          <div className="text-[9px] text-[var(--color-fg-faint)]">on margin</div>
+          <div className="text-[10px] text-[var(--color-fg-faint)]">on margin</div>
         </div>
       </div>
     </div>
@@ -158,9 +158,9 @@ function SignalAlignmentCard({ p }: { p: Position }) {
       : "var(--color-fg-muted)";
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-3 space-y-2.5">
+    <div className="rounded-[var(--radius-md)] inner-card px-4 py-3.5 space-y-2.5">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] flex items-center gap-1.5">
+        <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium flex items-center gap-1.5">
           <Activity size={11} />
           Posisi vs Sinyal Pasar
         </span>
@@ -188,7 +188,7 @@ function SignalAlignmentCard({ p }: { p: Position }) {
       {/* Score bar with thresholds */}
       {score != null && (
         <div>
-          <div className="relative h-1.5 rounded-full bg-white/5 overflow-hidden">
+          <div className="relative h-1.5 rounded-full bg-[var(--color-surface)] overflow-hidden">
             <div
               className="absolute top-0 bottom-0 w-px bg-[var(--color-warning)]/40"
               style={{ left: "60%" }}
@@ -212,7 +212,7 @@ function SignalAlignmentCard({ p }: { p: Position }) {
               }}
             />
           </div>
-          <div className="flex justify-between text-[8px] text-[var(--color-fg-faint)] mt-0.5 uppercase tracking-wider">
+          <div className="flex justify-between text-[9px] text-[var(--color-fg-faint)] mt-0.5 uppercase tracking-wider">
             <span>hindari</span>
             <span>sabar</span>
             <span>akumulasi</span>
@@ -283,10 +283,10 @@ function LeverageCard({ p }: { p: Position }) {
   const bufferDist = p.buffer_pct;
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-3 space-y-3">
+    <div className="rounded-[var(--radius-md)] inner-card px-4 py-3.5 space-y-3">
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] flex items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium flex items-center gap-1.5">
             <Zap size={11} />
             Exposure
           </span>
@@ -299,7 +299,7 @@ function LeverageCard({ p }: { p: Position }) {
           <Stat label="Margin" value={fmt(p.margin, 3)} subValue="USDT" />
           <Stat label="Notional" value={fmt(p.notional, 1)} subValue="USDT" />
         </div>
-        <div className="text-[9px] text-[var(--color-fg-faint)] mt-1.5 uppercase tracking-wider">
+        <div className="text-[10px] text-[var(--color-fg-faint)] mt-1.5 uppercase tracking-wider">
           {p.open_type} · {p.side.toLowerCase()}
         </div>
       </div>
@@ -347,14 +347,14 @@ function Stat({
 }) {
   return (
     <div className="leading-tight">
-      <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)]">
+      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)]">
         {label}
       </div>
       <div className={cn("text-[13px] font-semibold num")} style={{ color: tone }}>
         {value}
       </div>
       {subValue && (
-        <div className="text-[8px] text-[var(--color-fg-faint)] uppercase tracking-wider">
+        <div className="text-[9px] text-[var(--color-fg-faint)] uppercase tracking-wider">
           {subValue}
         </div>
       )}
@@ -395,7 +395,7 @@ function DistanceBar({
           {fmtPct(value)}
         </span>
       </div>
-      <div className="relative h-0.5 rounded-full bg-white/5 overflow-hidden">
+      <div className="relative h-0.5 rounded-full bg-[var(--color-surface)] overflow-hidden">
         <motion.div
           initial={false}
           animate={{ width: `${Math.min(Math.abs(value) / max, 1) * 100}%` }}

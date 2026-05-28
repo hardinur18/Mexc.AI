@@ -12,13 +12,13 @@ export const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof RD.Content> & { hideClose?: boolean }
 >(({ className, children, hideClose, ...props }, ref) => (
   <RD.Portal>
-    <RD.Overlay className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out fade-in-0 fade-out-0" />
+    <RD.Overlay className="fixed inset-0 z-50 bg-black/60 dark:bg-black/70 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out fade-in-0 fade-out-0" />
     <RD.Content
       ref={ref}
       className={cn(
         "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50",
         "w-[min(640px,calc(100vw-32px))] max-h-[calc(100vh-32px)] overflow-y-auto",
-        "glass rounded-[var(--radius-xl)] shadow-[var(--shadow-pop)]",
+        "page-panel shadow-[var(--shadow-pop)]",
         "data-[state=open]:animate-in data-[state=closed]:animate-out fade-in-0 fade-out-0 zoom-in-95",
         className,
       )}
@@ -26,7 +26,7 @@ export const DialogContent = React.forwardRef<
     >
       {children}
       {!hideClose && (
-        <RD.Close className="absolute top-3 right-3 rounded-[var(--radius-sm)] p-1.5 text-[var(--color-fg-subtle)] hover:bg-white/5 hover:text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-ring)]">
+        <RD.Close className="absolute top-3 right-3 rounded-[var(--radius-sm)] p-1.5 text-[var(--color-fg-subtle)] hover:bg-[var(--color-bg-elev-2)] hover:text-[var(--color-fg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent-ring)]">
           <X size={16} />
         </RD.Close>
       )}

@@ -528,7 +528,7 @@ function MarkRow({ lv, p }: { lv: Level; p: Position }) {
         initial={{ opacity: 0.5, y: -2 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="num text-[13px] font-bold text-white"
+        className="num text-[13px] font-bold text-[var(--color-fg)]"
       >
         {fmtPrice(lv.price)}
       </motion.span>

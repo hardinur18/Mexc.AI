@@ -204,7 +204,7 @@ function RiskCard({
         ? "var(--color-warning)"
         : "var(--color-success)";
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-2.5">
+    <div className="rounded-[var(--radius-md)] inner-card px-3 py-2.5">
       <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] mb-1">
         <span style={{ color: c }}>{icon}</span>
         {label}
@@ -216,7 +216,7 @@ function RiskCard({
         <div className="text-[10px] text-[var(--color-fg-faint)] mt-0.5 truncate">{sub}</div>
       )}
       {/* Bar */}
-      <div className="relative h-1 rounded-full bg-white/5 overflow-hidden mt-1.5">
+      <div className="relative h-1 rounded-full bg-[var(--color-surface)] overflow-hidden mt-1.5">
         {ruleLine !== undefined && (
           <div
             className="absolute top-0 bottom-0 w-px bg-white/40"

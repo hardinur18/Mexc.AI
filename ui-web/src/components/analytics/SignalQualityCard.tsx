@@ -73,7 +73,7 @@ export function SignalQualityCard({
           : "var(--color-danger)";
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <ShieldCheck size={11} className="text-[var(--color-accent)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -84,7 +84,7 @@ export function SignalQualityCard({
         </span>
       </div>
 
-      <div className="p-3 space-y-2">
+      <div className="p-4 space-y-2">
         {/* Funding window warning */}
         {fundingWindow?.near_settlement && (
           <motion.div

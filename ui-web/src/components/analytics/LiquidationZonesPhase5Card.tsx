@@ -26,7 +26,7 @@ export function LiquidationZonesPhase5Card({ zones, currentPrice }: Props) {
   const longShare = zones.long_share_estimate;
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Bomb size={11} className="text-[var(--color-warning)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -37,7 +37,7 @@ export function LiquidationZonesPhase5Card({ zones, currentPrice }: Props) {
         </span>
       </div>
 
-      <div className="p-3">
+      <div className="p-4">
         {/* Dominant side gauge */}
         <div className="mb-3">
           <div className="flex items-center justify-between text-[9px] mb-1">
@@ -51,7 +51,7 @@ export function LiquidationZonesPhase5Card({ zones, currentPrice }: Props) {
               {(100 - longShare).toFixed(0)}% shorts
             </span>
           </div>
-          <div className="relative h-1.5 rounded-full overflow-hidden bg-white/5">
+          <div className="relative h-1.5 rounded-full overflow-hidden bg-[var(--color-surface)]">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${longShare}%` }}

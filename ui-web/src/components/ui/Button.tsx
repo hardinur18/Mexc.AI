@@ -8,17 +8,17 @@ const buttonVariants = cva(
     variants: {
       tone: {
         default:
-          "bg-white/5 text-[var(--color-fg)] ring-1 ring-[var(--color-border)] hover:bg-white/10",
+          "bg-[var(--color-surface)] text-[var(--color-fg)] ring-1 ring-[var(--color-border)] hover:bg-[var(--color-bg-elev-2)]",
         accent:
           "bg-[var(--color-accent-soft)] text-[var(--color-accent)] ring-1 ring-[var(--color-accent)]/40 hover:bg-[var(--color-accent-soft)]/80",
-        ghost: "text-[var(--color-fg-muted)] hover:bg-white/5",
+        ghost: "text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-elev-2)]",
         active:
           "bg-[var(--color-accent-soft)] text-[var(--color-accent)] ring-1 ring-[var(--color-accent)]/50",
       },
       size: {
         sm: "h-7 px-2.5 text-[11px] rounded-[var(--radius-sm)]",
-        md: "h-8 px-3 text-xs rounded-[var(--radius-md)]",
-        lg: "h-9 px-4 text-sm rounded-[var(--radius-md)]",
+        md: "h-8 px-3.5 text-[12px] rounded-[var(--radius-md)]",
+        lg: "h-9 px-5 text-[13px] rounded-[var(--radius-md)]",
         icon: "h-8 w-8 rounded-[var(--radius-md)]",
       },
     },

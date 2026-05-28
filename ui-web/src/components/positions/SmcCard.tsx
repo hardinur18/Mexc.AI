@@ -20,7 +20,7 @@ const WYCKOFF_LABELS: Record<string, { text: string; tone: string; emoji: string
 export function SmcCard({ a }: SmcCardProps) {
   if (!a) {
     return (
-      <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-3 text-[10px] text-[var(--color-fg-faint)]">
+      <div className="rounded-[var(--radius-md)] inner-card px-3 py-3 text-[10px] text-[var(--color-fg-faint)]">
         Menghitung analisa smart money...
       </div>
     );
@@ -37,7 +37,7 @@ export function SmcCard({ a }: SmcCardProps) {
   const wyckoffInfo = WYCKOFF_LABELS[wyckoff?.phase ?? "unknown"] ?? WYCKOFF_LABELS.unknown;
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-3 space-y-3">
+    <div className="rounded-[var(--radius-md)] inner-card px-3 py-3 space-y-3">
       <div className="flex items-center justify-between">
         <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] flex items-center gap-1.5">
           <Crosshair size={11} />

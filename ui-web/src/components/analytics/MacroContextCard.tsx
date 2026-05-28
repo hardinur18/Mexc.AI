@@ -40,7 +40,7 @@ export function MacroContextCard({ a }: Props) {
           : "var(--color-fg-muted)";
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Globe size={11} className="text-[var(--color-accent)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -51,10 +51,10 @@ export function MacroContextCard({ a }: Props) {
         </span>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 p-3">
+      <div className="grid grid-cols-3 gap-2 p-4">
         {/* Long/Short Ratio */}
         <div className="rounded-[var(--radius-sm)] bg-white/[0.03] px-2.5 py-2">
-          <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
+          <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
             Long/Short
           </div>
           {longPct != null ? (
@@ -77,7 +77,7 @@ export function MacroContextCard({ a }: Props) {
                   long
                 </span>
               </div>
-              <div className="relative h-1 mt-1.5 rounded-full overflow-hidden bg-white/5">
+              <div className="relative h-1 mt-1.5 rounded-full overflow-hidden bg-[var(--color-surface)]">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${longPct}%` }}
@@ -104,7 +104,7 @@ export function MacroContextCard({ a }: Props) {
 
         {/* Funding Now + 7d avg */}
         <div className="rounded-[var(--radius-sm)] bg-white/[0.03] px-2.5 py-2">
-          <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
+          <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
             Funding
           </div>
           {fundingNow != null ? (
@@ -134,7 +134,7 @@ export function MacroContextCard({ a }: Props) {
 
         {/* OI history sparkline */}
         <div className="rounded-[var(--radius-sm)] bg-white/[0.03] px-2.5 py-2">
-          <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
+          <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1">
             Open Interest
           </div>
           <OiSpark history={oiHist} />

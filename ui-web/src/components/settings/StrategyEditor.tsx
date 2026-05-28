@@ -109,7 +109,7 @@ export function StrategyEditor({ onClose: _onClose }: StrategyEditorProps) {
                 "text-[11px] px-2.5 py-1 rounded-[var(--radius-sm)] font-medium transition ring-1",
                 selectedAccountId === a.id
                   ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)] ring-[var(--color-accent)]/40"
-                  : "bg-white/[0.03] text-[var(--color-fg-muted)] ring-[var(--color-border)] hover:text-[var(--color-fg)]",
+                  : "bg-[var(--color-surface)] text-[var(--color-fg-muted)] ring-[var(--color-border)] hover:text-[var(--color-fg)]",
               )}
             >
               {a.name}
@@ -133,7 +133,7 @@ export function StrategyEditor({ onClose: _onClose }: StrategyEditorProps) {
                 "text-[11px] px-2 py-1.5 rounded-[var(--radius-sm)] font-medium transition ring-1 flex items-center justify-center gap-1.5",
                 strategy.role === r
                   ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)] ring-[var(--color-accent)]/40"
-                  : "bg-white/[0.03] text-[var(--color-fg-muted)] ring-[var(--color-border)]",
+                  : "bg-[var(--color-surface)] text-[var(--color-fg-muted)] ring-[var(--color-border)]",
               )}
             >
               {r === "radar" && <Radar size={11} />}
@@ -151,7 +151,7 @@ export function StrategyEditor({ onClose: _onClose }: StrategyEditorProps) {
             <select
               value={strategy.follow_radar ?? ""}
               onChange={(e) => setStrategy({ ...strategy, follow_radar: e.target.value })}
-              className="w-full text-[11px] px-2 py-1.5 rounded-[var(--radius-sm)] bg-black/30 ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none text-[var(--color-fg)]"
+              className="w-full text-[11px] px-2 py-1.5 rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none text-[var(--color-fg)]"
             >
               <option value="">— pilih radar —</option>
               {radarAccounts.map((a) => (
@@ -273,7 +273,7 @@ export function StrategyEditor({ onClose: _onClose }: StrategyEditorProps) {
                   setStrategy({ ...strategy, take_profit_ladder: next });
                 }}
                 placeholder="reason..."
-                className="px-2 py-1 rounded-[var(--radius-sm)] bg-black/30 ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none text-[10px]"
+                className="px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none text-[10px]"
               />
               <button
                 type="button"
@@ -292,7 +292,7 @@ export function StrategyEditor({ onClose: _onClose }: StrategyEditorProps) {
       </div>
 
       {/* SL+ */}
-      <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-2.5">
+      <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-elev)] ring-1 ring-[var(--color-border)] px-3 py-2.5">
         <label className="flex items-center justify-between mb-2 cursor-pointer">
           <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
             SL+ (Trailing Profit Lock)
@@ -430,7 +430,7 @@ function NumberInput({
   max?: number;
 }) {
   return (
-    <div className="flex items-center gap-1 px-2 py-1 rounded-[var(--radius-sm)] bg-black/30 ring-1 ring-[var(--color-border)] focus-within:ring-[var(--color-accent)]">
+    <div className="flex items-center gap-1 px-2 py-1 rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] focus-within:ring-[var(--color-accent)]">
       <input
         type="number"
         value={value}

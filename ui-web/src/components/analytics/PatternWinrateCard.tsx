@@ -30,7 +30,7 @@ export function PatternWinrateCard() {
 
   if (data.total_closed === 0) {
     return (
-      <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+      <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
         <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
           <Trophy size={11} className="text-[var(--color-accent)]" />
           <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -51,7 +51,7 @@ export function PatternWinrateCard() {
   const patterns = data.by_pattern ?? {};
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Trophy size={11} className="text-[var(--color-accent)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -62,7 +62,7 @@ export function PatternWinrateCard() {
         </span>
       </div>
 
-      <div className="p-3 space-y-3">
+      <div className="p-4 space-y-3">
         {/* By direction */}
         <div className="grid grid-cols-2 gap-2">
           {(["LONG", "SHORT"] as const).map((d) => {

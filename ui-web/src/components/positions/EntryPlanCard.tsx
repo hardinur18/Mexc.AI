@@ -37,7 +37,7 @@ export function EntryPlanCard({
 }: EntryPlanCardProps) {
   if (!plan) {
     return (
-      <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-4 text-center">
+      <div className="rounded-[var(--radius-md)] inner-card px-3 py-4 text-center">
         <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] mb-1.5 flex items-center justify-center gap-1.5">
           <Target size={11} /> Rencana Entry Multi-Tier
         </div>
@@ -55,19 +55,19 @@ export function EntryPlanCard({
   const tpLadder = plan.tp_ladder ?? [];
 
   return (
-    <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div
-        className="px-3 py-2 flex items-center justify-between border-b border-[var(--color-border)]/50"
+        className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]/50"
         style={{ background: `color-mix(in oklch, ${tone} 8%, transparent)` }}
       >
-        <div className="flex items-center gap-1.5">
-          <Target size={11} style={{ color: tone }} />
-          <span className="text-[10px] uppercase tracking-wider font-semibold">
+        <div className="flex items-center gap-2">
+          <Target size={13} style={{ color: tone }} />
+          <span className="text-[11px] uppercase tracking-wider font-semibold">
             Rencana Entry Multi-Tier
           </span>
         </div>
         <span
-          className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-[var(--radius-sm)] flex items-center gap-1 ring-1"
+          className="text-[11px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-[var(--radius-sm)] flex items-center gap-1 ring-1"
           style={{
             color: tone,
             background: `color-mix(in oklch, ${tone} 14%, transparent)`,
@@ -78,11 +78,11 @@ export function EntryPlanCard({
         </span>
       </div>
 
-      <div className="px-3 py-3 space-y-3">
+      <div className="px-4 py-4 space-y-4">
         {/* Reasoning — short summary */}
         {plan.reasoning && plan.reasoning.length > 0 && (
           <div>
-            <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1 flex items-center gap-1.5">
+            <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium mb-1 flex items-center gap-1.5">
               <Sparkles size={10} /> Kenapa Setup Ini Valid
             </div>
             <ul className="space-y-0.5">
@@ -105,7 +105,7 @@ export function EntryPlanCard({
         {/* Tier ladder — entry plan per account */}
         {tiers.length > 0 && (
           <div>
-            <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1.5 flex items-center gap-1.5">
+            <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium mb-1.5 flex items-center gap-1.5">
               <Radar size={10} /> Cascade Entry (DCA Pyramid)
             </div>
             <div className="space-y-2">
@@ -133,7 +133,7 @@ export function EntryPlanCard({
                     {/* Tier header row */}
                     <div className="grid grid-cols-[64px_1fr_auto] gap-2 items-center">
                       <span
-                        className="text-[9px] font-bold uppercase tracking-wider"
+                        className="text-[10px] font-bold uppercase tracking-wider"
                         style={{ color: tierColor }}
                       >
                         {t.name}
@@ -174,7 +174,7 @@ export function EntryPlanCard({
                     </div>
                     {/* Tier rationale */}
                     {t.rationale && (
-                      <div className="text-[9px] text-[var(--color-fg-subtle)] leading-snug pl-[68px] -mt-0.5">
+                      <div className="text-[10px] text-[var(--color-fg-subtle)] leading-snug pl-[68px] -mt-0.5">
                         {t.rationale}
                       </div>
                     )}
@@ -191,7 +191,7 @@ export function EntryPlanCard({
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-[10px]">
                   <div>
-                    <div className="text-[9px] text-[var(--color-fg-faint)] uppercase">
+                    <div className="text-[10px] text-[var(--color-fg-faint)] uppercase">
                       Avg entry
                     </div>
                     <div className="num font-semibold text-[var(--color-fg)]">
@@ -201,13 +201,13 @@ export function EntryPlanCard({
                     </div>
                   </div>
                   <div>
-                    <div className="text-[9px] text-[var(--color-fg-faint)] uppercase">
+                    <div className="text-[10px] text-[var(--color-fg-faint)] uppercase">
                       Total expo
                     </div>
                     <div className="num font-semibold text-[var(--color-fg)]">
                       {plan.cascade_projection.total_size_pct_equity}%
                       {equityUsd > 0 && (
-                        <span className="text-[9px] text-[var(--color-fg-faint)] ml-1">
+                        <span className="text-[10px] text-[var(--color-fg-faint)] ml-1">
                           ($
                           {(
                             (equityUsd *
@@ -220,7 +220,7 @@ export function EntryPlanCard({
                     </div>
                   </div>
                   <div>
-                    <div className="text-[9px] text-[var(--color-fg-faint)] uppercase">
+                    <div className="text-[10px] text-[var(--color-fg-faint)] uppercase">
                       Worst-case rugi
                     </div>
                     <div className="num font-semibold text-[var(--color-danger)]">
@@ -228,7 +228,7 @@ export function EntryPlanCard({
                     </div>
                   </div>
                 </div>
-                <div className="text-[9px] text-[var(--color-fg-faint)] leading-snug">
+                <div className="text-[10px] text-[var(--color-fg-faint)] leading-snug">
                   {plan.cascade_projection.explanation}
                 </div>
               </div>
@@ -239,7 +239,7 @@ export function EntryPlanCard({
         {/* TP ladder dengan PRICE actual */}
         {tpLadder.length > 0 && (
           <div>
-            <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)] mb-1.5 flex items-center gap-1.5">
+            <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium mb-1.5 flex items-center gap-1.5">
               <Layers size={10} /> Take Profit Bertahap (Harga Actual)
             </div>
             <div className="space-y-0.5">

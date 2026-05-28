@@ -70,7 +70,7 @@ export function CascadePanel() {
   };
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Zap size={11} className="text-[var(--color-accent)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -102,7 +102,7 @@ export function CascadePanel() {
 
       {/* Active list */}
       {active.length === 0 ? (
-        <div className="p-3 text-[10px] text-center text-[var(--color-fg-faint)]">
+        <div className="p-4 text-[10px] text-center text-[var(--color-fg-faint)]">
           Belum ada cascade aktif — klik tombol "Start cascade" di sinyal untuk mulai.
         </div>
       ) : (

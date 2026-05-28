@@ -13,6 +13,8 @@ import {
   Minimize2,
   MoreHorizontal,
   Check,
+  Sun,
+  Moon,
 } from "lucide-react";
 import type { Snapshot } from "@/types/position";
 import { lazy, Suspense } from "react";
@@ -48,6 +50,8 @@ export function Header({ snapshot, isError, onOpenCommandPalette }: HeaderProps)
   const toggleGroupByAccount = useUiStore((s) => s.toggleGroupByAccount);
   const fullscreen = useUiStore((s) => s.fullscreen);
   const toggleFullscreen = useUiStore((s) => s.toggleFullscreen);
+  const theme = useUiStore((s) => s.theme);
+  const toggleTheme = useUiStore((s) => s.toggleTheme);
 
   const triggerFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -121,7 +125,7 @@ export function Header({ snapshot, isError, onOpenCommandPalette }: HeaderProps)
                 <AnimatedNumber
                   value={snapshot.account.equity}
                   decimals={2}
-                  className="text-lg font-bold num text-white"
+                  className="text-lg font-bold num text-[var(--color-fg)]"
                 />
                 <span className="text-[10px] text-[var(--color-fg-faint)]">USDT</span>
               </div>
@@ -132,7 +136,7 @@ export function Header({ snapshot, isError, onOpenCommandPalette }: HeaderProps)
                     ? "bg-[var(--color-success-soft)] text-[var(--color-success)] ring-[var(--color-success)]/30"
                     : snapshot.account.unrealized < 0
                       ? "bg-[var(--color-danger-soft)] text-[var(--color-danger)] ring-[var(--color-danger)]/30"
-                      : "bg-white/5 text-[var(--color-fg-subtle)] ring-[var(--color-border)]")
+                      : "bg-[var(--color-bg-elev-2)] text-[var(--color-fg-subtle)] ring-[var(--color-border)]")
                 }
               >
                 <AnimatedNumber
@@ -174,7 +178,7 @@ export function Header({ snapshot, isError, onOpenCommandPalette }: HeaderProps)
         />
 
         {/* PRIMARY: Polling interval */}
-        <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-[var(--radius-md)] bg-white/[0.03] ring-1 ring-[var(--color-border)]">
+        <div className="flex items-center gap-0.5 px-1 py-0.5 rounded-[var(--radius-md)] bg-[var(--color-surface)] ring-1 ring-[var(--color-border)]">
           {intervals.map((iv) => (
             <button
               key={iv}
@@ -257,6 +261,14 @@ export function Header({ snapshot, isError, onOpenCommandPalette }: HeaderProps)
                 setOverflowOpen(false);
               }}
             />
+            <MenuItem
+              icon={theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
+              label={theme === "dark" ? "Mode siang" : "Mode malam"}
+              onClick={() => {
+                toggleTheme();
+                setOverflowOpen(false);
+              }}
+            />
 
             <div className="my-1 h-px bg-[var(--color-border)]/60" />
 
@@ -308,14 +320,14 @@ function MenuItem({
           ? "opacity-40 cursor-not-allowed"
           : active
             ? "bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent-soft)]"
-            : "text-[var(--color-fg-muted)] hover:bg-white/[0.05] hover:text-[var(--color-fg)]")
+            : "text-[var(--color-fg-muted)] hover:bg-[var(--color-accent-soft)] hover:text-[var(--color-fg)]")
       }
     >
       <span className="text-[var(--color-fg-subtle)] shrink-0">{icon}</span>
       <span className="flex-1 text-left">{label}</span>
       {active && <Check size={11} className="text-[var(--color-accent)]" />}
       {shortcut && !active && (
-        <span className="text-[9px] font-mono text-[var(--color-fg-faint)] px-1 py-0.5 rounded bg-white/[0.04] ring-1 ring-[var(--color-border)]">
+        <span className="text-[9px] font-mono text-[var(--color-fg-faint)] px-1 py-0.5 rounded bg-[var(--color-surface)] ring-1 ring-[var(--color-border)]">
           {shortcut}
         </span>
       )}

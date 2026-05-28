@@ -85,15 +85,15 @@ function Stat({
 
   return (
     <motion.div variants={item}>
-      <Card className="p-3 transition hover:ring-[var(--color-border-strong)] hover:translate-y-[-1px] hover:shadow-[var(--shadow-card)]">
-        <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+      <Card className="p-4 transition hover:ring-[var(--color-border-strong)] hover:translate-y-[-1px] hover:shadow-[var(--shadow-card)]">
+        <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium">
           {label}
         </div>
-        <div className={cn("text-lg font-semibold num mt-1", toneCls)}>
+        <div className={cn("text-lg font-semibold num mt-1.5", toneCls)}>
           <AnimatedNumber value={value} decimals={decimals} signed={signed} />
         </div>
         {sub && (
-          <div className="text-[10px] text-[var(--color-fg-subtle)] mt-0.5">{sub}</div>
+          <div className="text-[11px] text-[var(--color-fg-faint)] mt-1">{sub}</div>
         )}
       </Card>
     </motion.div>
@@ -116,20 +116,20 @@ function LongShortCard({ positions, ts }: { positions: Position[]; ts: number })
   const longPct = (longNotional / totalNotional) * 100;
 
   return (
-    <Card className="p-3 transition hover:ring-[var(--color-border-strong)] hover:translate-y-[-1px] hover:shadow-[var(--shadow-card)]">
+    <Card className="p-4 transition hover:ring-[var(--color-border-strong)] hover:translate-y-[-1px] hover:shadow-[var(--shadow-card)]">
       <div className="flex items-center justify-between">
-        <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+        <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium">
           Positions
         </div>
         <TimeAgo ts={ts} />
       </div>
-      <div className="text-lg font-semibold num mt-1">
+      <div className="text-lg font-semibold num mt-1.5">
         {total} <span className="text-[10px] text-[var(--color-fg-faint)] font-normal">total</span>
       </div>
       {/* Long / Short split bar */}
       {total > 0 && (
         <div className="mt-1.5">
-          <div className="relative h-1 rounded-full overflow-hidden bg-white/5">
+          <div className="relative h-1 rounded-full overflow-hidden bg-[var(--color-border)]">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${longPct}%` }}

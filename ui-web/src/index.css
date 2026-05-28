@@ -11,21 +11,21 @@
   --font-mono: "JetBrains Mono", "Geist Mono", ui-monospace, "SF Mono", monospace;
 
   /* Surface / brand colors */
-  --color-bg: oklch(15% 0.015 260);
-  --color-bg-elev: oklch(18% 0.018 260);
-  --color-bg-elev-2: oklch(22% 0.02 260);
-  --color-surface: oklch(20% 0.015 260 / 0.6);
-  --color-border: oklch(30% 0.02 260 / 0.4);
-  --color-border-strong: oklch(40% 0.025 260 / 0.6);
+  --color-bg: oklch(13.5% 0.012 250);
+  --color-bg-elev: oklch(17% 0.014 250);
+  --color-bg-elev-2: oklch(21% 0.016 250);
+  --color-surface: oklch(20% 0.014 250 / 0.72);
+  --color-border: oklch(32% 0.015 250 / 0.46);
+  --color-border-strong: oklch(45% 0.02 250 / 0.62);
 
   --color-fg: oklch(95% 0.01 260);
   --color-fg-muted: oklch(70% 0.015 260);
   --color-fg-subtle: oklch(55% 0.02 260);
   --color-fg-faint: oklch(40% 0.02 260);
 
-  --color-accent: oklch(72% 0.18 280);
-  --color-accent-soft: oklch(72% 0.18 280 / 0.15);
-  --color-accent-ring: oklch(72% 0.18 280 / 0.4);
+  --color-accent: oklch(73% 0.14 225);
+  --color-accent-soft: oklch(73% 0.14 225 / 0.14);
+  --color-accent-ring: oklch(73% 0.14 225 / 0.38);
 
   --color-success: oklch(78% 0.17 165);
   --color-success-soft: oklch(78% 0.17 165 / 0.12);
@@ -41,16 +41,16 @@
   /* Radius scale */
   --radius-xs: 4px;
   --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
-  --radius-2xl: 24px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
   --radius-full: 9999px;
 
   /* Shadows */
   --shadow-soft: 0 1px 2px oklch(0% 0 0 / 0.3);
-  --shadow-card: 0 4px 16px oklch(0% 0 0 / 0.3);
-  --shadow-pop: 0 12px 40px oklch(0% 0 0 / 0.4);
+  --shadow-card: 0 10px 28px oklch(0% 0 0 / 0.22);
+  --shadow-pop: 0 18px 48px oklch(0% 0 0 / 0.34);
 
   /* Animation timing */
   --ease-bounce: cubic-bezier(0.34, 1.4, 0.4, 1);
@@ -60,17 +60,17 @@
   --duration-slow: 600ms;
   --duration-xslow: 1000ms;
 
-  /* Typography scale — pakai ini, jangan hardcode text-[10px] dst */
+  /* Typography scale */
   --text-micro: 9px;
   --text-caption: 10px;
   --text-label: 11px;
-  --text-body: 12px;
-  --text-h6: 13px;
-  --text-h5: 14px;
-  --text-h4: 16px;
-  --text-h3: 18px;
-  --text-h2: 22px;
-  --text-h1: 28px;
+  --text-body: 13px;
+  --text-h6: 14px;
+  --text-h5: 15px;
+  --text-h4: 17px;
+  --text-h3: 20px;
+  --text-h2: 24px;
+  --text-h1: 30px;
 
   /* Spacing scale — kelipatan 4px */
   --space-1: 4px;
@@ -80,6 +80,7 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
 }
 
 /* Root reset */
@@ -87,16 +88,54 @@
   color-scheme: dark;
   font-family: var(--font-sans);
   font-feature-settings: "tnum", "cv11";
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--color-fg);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
+/* ════════════════════════════════════════════════════════════════
+   LIGHT THEME — override design tokens when data-theme="light"
+   ════════════════════════════════════════════════════════════════ */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg: oklch(96% 0.004 260);
+  --color-bg-elev: oklch(100% 0 0);
+  --color-bg-elev-2: oklch(94% 0.006 260);
+  --color-surface: oklch(100% 0 0 / 0.8);
+  --color-border: oklch(85% 0.008 260 / 0.6);
+  --color-border-strong: oklch(75% 0.012 260 / 0.5);
+
+  --color-fg: oklch(18% 0.015 260);
+  --color-fg-muted: oklch(35% 0.015 260);
+  --color-fg-subtle: oklch(50% 0.012 260);
+  --color-fg-faint: oklch(65% 0.008 260);
+
+  --color-accent: oklch(50% 0.16 225);
+  --color-accent-soft: oklch(50% 0.16 225 / 0.08);
+  --color-accent-ring: oklch(50% 0.16 225 / 0.24);
+
+  --color-success: oklch(45% 0.17 165);
+  --color-success-soft: oklch(45% 0.17 165 / 0.08);
+  --color-warning: oklch(55% 0.17 75);
+  --color-warning-soft: oklch(55% 0.17 75 / 0.08);
+  --color-danger: oklch(50% 0.22 25);
+  --color-danger-soft: oklch(50% 0.22 25 / 0.07);
+  --color-info: oklch(48% 0.13 220);
+
+  --color-long: oklch(45% 0.17 165);
+  --color-short: oklch(50% 0.22 25);
+
+  --shadow-soft: 0 1px 3px oklch(0% 0 0 / 0.06), 0 0 0 1px oklch(0% 0 0 / 0.03);
+  --shadow-card: 0 2px 8px oklch(0% 0 0 / 0.06), 0 0 0 1px oklch(0% 0 0 / 0.04);
+  --shadow-pop: 0 8px 30px oklch(0% 0 0 / 0.1), 0 0 0 1px oklch(0% 0 0 / 0.04);
+}
+
 body {
   background:
-    radial-gradient(ellipse 60% 40% at 20% 0%, oklch(25% 0.05 280 / 0.5) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 50% at 80% 30%, oklch(22% 0.04 220 / 0.4) 0%, transparent 50%),
-    radial-gradient(ellipse 70% 50% at 50% 100%, oklch(20% 0.03 320 / 0.3) 0%, transparent 60%),
+    linear-gradient(180deg, color-mix(in oklch, var(--color-bg-elev) 34%, var(--color-bg)) 0%, var(--color-bg) 46%),
     var(--color-bg);
   background-attachment: fixed;
   min-height: 100vh;
@@ -104,16 +143,20 @@ body {
   position: relative;
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
+:root[data-theme="light"] body {
   background:
-    radial-gradient(circle at 70% 20%, oklch(72% 0.18 280 / 0.05) 0%, transparent 35%),
-    radial-gradient(circle at 30% 80%, oklch(78% 0.17 165 / 0.04) 0%, transparent 40%);
-  animation: ambient-drift 20s ease-in-out infinite;
-  z-index: 0;
+    linear-gradient(180deg, oklch(98% 0.004 250), oklch(94.5% 0.006 250)),
+    var(--color-bg);
+}
+
+body::before {
+  content: none;
+}
+
+:root[data-theme="light"] body::before {
+  background:
+    radial-gradient(circle at 70% 20%, oklch(72% 0.18 280 / 0.03) 0%, transparent 35%),
+    radial-gradient(circle at 30% 80%, oklch(78% 0.17 165 / 0.02) 0%, transparent 40%);
 }
 
 @keyframes ambient-drift {
@@ -129,12 +172,186 @@ body::before {
 ::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-fg-subtle); }
 
+/* ════════════════════════════════════════════════════════════════
+   LIGHT THEME — Global component overrides
+   Flip dark-mode assumptions (bg-white/X, bg-black/X, text-white)
+   without touching individual component files.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Glass surfaces — clean white cards with subtle border */
+:root[data-theme="light"] .glass {
+  background: oklch(100% 0 0 / 0.85);
+  backdrop-filter: blur(12px) saturate(120%);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+/* Sticky header bar */
+:root[data-theme="light"] .sticky {
+  --tw-bg-opacity: 0.92;
+}
+
+/* Row hover — use dark overlay instead of white */
+:root[data-theme="light"] .row-hover:hover {
+  background: color-mix(in oklch, var(--color-fg) 3%, transparent);
+}
+
+/* Grad border — softer in light */
+:root[data-theme="light"] .grad-border::before {
+  opacity: 0.6;
+}
+
+/* Glow — tone down for light mode */
+:root[data-theme="light"] .glow-accent:hover {
+  box-shadow: 0 0 12px color-mix(in oklch, var(--color-accent) 15%, transparent);
+}
+
+/* Lift — lighter shadow */
+:root[data-theme="light"] .lift:hover {
+  box-shadow: var(--shadow-pop);
+}
+
+/* Scrollbar — lighter track */
+:root[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: oklch(80% 0.01 260 / 0.4);
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+  background: oklch(65% 0.01 260 / 0.5);
+}
+
+/* ─── Global Tailwind class overrides for light mode ───
+   These catch all bg-white/X (invisible on white) and
+   bg-black/X (too dark on light) used across 50+ components. */
+
+/* bg-white/[0.03..0.1] → subtle gray tint */
+:root[data-theme="light"] [class*="bg-white\\/"] {
+  --tw-bg-opacity: 1 !important;
+  background-color: oklch(92% 0.005 260 / 0.5) !important;
+}
+/* bg-white/5 used as input/card inner bg */
+:root[data-theme="light"] [class*="bg-white\\/5"],
+:root[data-theme="light"] [class*="bg-white\\/\\[0\\.03\\]"],
+:root[data-theme="light"] [class*="bg-white\\/\\[0\\.04\\]"],
+:root[data-theme="light"] [class*="bg-white\\/\\[0\\.05\\]"] {
+  background-color: oklch(94% 0.004 260 / 0.6) !important;
+}
+:root[data-theme="light"] [class*="bg-white\\/10"] {
+  background-color: oklch(90% 0.006 260 / 0.7) !important;
+}
+
+/* bg-black/20..30 → light gray card sections */
+:root[data-theme="light"] [class*="bg-black\\/20"],
+:root[data-theme="light"] [class*="bg-black\\/25"],
+:root[data-theme="light"] [class*="bg-black\\/30"] {
+  background-color: oklch(96% 0.003 260 / 0.6) !important;
+}
+/* bg-black/40..70 → medium gray overlays */
+:root[data-theme="light"] [class*="bg-black\\/40"],
+:root[data-theme="light"] [class*="bg-black\\/50"] {
+  background-color: oklch(92% 0.005 260 / 0.7) !important;
+}
+:root[data-theme="light"] [class*="bg-black\\/60"],
+:root[data-theme="light"] [class*="bg-black\\/70"] {
+  background-color: oklch(100% 0 0 / 0.9) !important;
+}
+
+/* text-white → dark foreground */
+:root[data-theme="light"] [class*="text-white"] {
+  color: var(--color-fg) !important;
+}
+
+/* ring-white variants → use border color */
+:root[data-theme="light"] [class*="ring-white"] {
+  --tw-ring-color: var(--color-border-strong) !important;
+}
+
+/* Skeleton shimmer */
+:root[data-theme="light"] [class*="animate-shimmer"] {
+  background: linear-gradient(90deg, oklch(94% 0.004 260) 25%, oklch(90% 0.006 260) 50%, oklch(94% 0.004 260) 75%) !important;
+}
+
+/* Score/progress bars — ensure visibility */
+:root[data-theme="light"] [class*="bg-gradient-to-r"] {
+  opacity: 0.85;
+}
+
 /* Utility classes (set via tokens) */
 .num { font-variant-numeric: tabular-nums; }
 .glass {
-  background: var(--color-surface);
+  background: var(--color-bg-elev);
   backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+}
+
+.app-page {
+  padding: var(--space-4);
+  padding-bottom: calc(84px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .app-page {
+    padding: var(--space-5);
+    padding-bottom: var(--space-5);
+  }
+}
+
+.page-panel {
+  background: color-mix(in oklch, var(--color-bg-elev) 92%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px) saturate(130%);
+}
+
+.page-titlebar {
+  padding: var(--space-4);
+}
+
+.page-title {
+  font-size: var(--text-h3);
+  line-height: 1.15;
+  font-weight: 750;
+  letter-spacing: 0;
+  color: var(--color-fg);
+}
+
+.page-description {
+  margin-top: 4px;
+  max-width: 680px;
+  font-size: var(--text-body);
+  color: var(--color-fg-subtle);
+}
+
+.data-table-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.data-table {
+  min-width: 1180px;
+}
+
+/* Inner card — used inside expanded details, dashboard panels */
+.inner-card {
+  background: var(--color-bg-elev-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+/* Section header label — consistent uppercase label */
+.section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-fg-subtle);
+}
+
+/* Expanded detail panel background */
+.detail-panel {
+  background: var(--color-bg-elev-2);
+  border-top: 1px solid var(--color-border);
 }
 
 /* ─── 2026 micro-interactions ─── */

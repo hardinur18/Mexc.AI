@@ -6,7 +6,7 @@ export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDi
     <div
       ref={ref}
       className={cn(
-        "glass rounded-[var(--radius-xl)] shadow-[var(--shadow-card)]",
+        "page-panel transition-shadow duration-150",
         className,
       )}
       {...props}
@@ -17,14 +17,14 @@ Card.displayName = "Card";
 
 export const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("px-4 pt-4 pb-2", className)} {...props} />
+    <div ref={ref} className={cn("px-5 pt-4 pb-2", className)} {...props} />
   ),
 );
 CardHeader.displayName = "CardHeader";
 
 export const CardBody = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("px-4 pb-4", className)} {...props} />
+    <div ref={ref} className={cn("px-5 pb-4", className)} {...props} />
   ),
 );
 CardBody.displayName = "CardBody";
@@ -43,13 +43,13 @@ export const StatCard: React.FC<{
         ? "text-[var(--color-danger)]"
         : "text-[var(--color-fg)]";
   return (
-    <Card className={cn("p-3", className)}>
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+    <Card className={cn("p-4", className)}>
+      <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-medium">
         {label}
       </div>
-      <div className={cn("text-lg font-semibold num mt-1", toneCls)}>{value}</div>
+      <div className={cn("text-lg font-semibold num mt-1.5", toneCls)}>{value}</div>
       {sub && (
-        <div className="text-[10px] text-[var(--color-fg-subtle)] mt-0.5">{sub}</div>
+        <div className="text-[11px] text-[var(--color-fg-faint)] mt-1">{sub}</div>
       )}
     </Card>
   );

@@ -41,6 +41,12 @@ interface UiState {
   groupByAccount: boolean;
   /** Fullscreen mode flag — tells layout to use full viewport. */
   fullscreen: boolean;
+  /** Theme mode — dark or light. */
+  theme: "dark" | "light";
+  /** Active page in sidebar navigation. */
+  activePage: "dashboard" | "signals" | "cascade" | "performance" | "risk" | "accounts" | "history";
+  /** Sidebar collapsed state. */
+  sidebarCollapsed: boolean;
 
   setIntervalSec: (v: 2 | 5 | 10) => void;
   togglePaused: () => void;
@@ -55,6 +61,9 @@ interface UiState {
   setCursor: (i: number) => void;
   toggleGroupByAccount: () => void;
   toggleFullscreen: () => void;
+  toggleTheme: () => void;
+  setActivePage: (page: UiState["activePage"]) => void;
+  toggleSidebar: () => void;
 }
 
 export const useUiStore = create<UiState>()(persist((set) => ({
@@ -68,6 +77,9 @@ export const useUiStore = create<UiState>()(persist((set) => ({
   cursor: 0,
   groupByAccount: false,
   fullscreen: false,
+  theme: "dark" as "dark" | "light",
+  activePage: "dashboard" as UiState["activePage"],
+  sidebarCollapsed: false,
 
   setIntervalSec: (v) => set({ intervalSec: v }),
   togglePaused: () => set((s) => ({ paused: !s.paused })),
@@ -101,6 +113,14 @@ export const useUiStore = create<UiState>()(persist((set) => ({
   setCursor: (i) => set({ cursor: i }),
   toggleGroupByAccount: () => set((s) => ({ groupByAccount: !s.groupByAccount })),
   toggleFullscreen: () => set((s) => ({ fullscreen: !s.fullscreen })),
+  toggleTheme: () =>
+    set((s) => {
+      const next = s.theme === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      return { theme: next };
+    }),
+  setActivePage: (page) => set({ activePage: page }),
+  toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 }), {
   name: "mexc-dashboard-ui",
   storage: createJSONStorage(() => localStorage),
@@ -112,14 +132,22 @@ export const useUiStore = create<UiState>()(persist((set) => ({
     accountSelectionTouched: s.accountSelectionTouched,
     groupByAccount: s.groupByAccount,
     fullscreen: s.fullscreen,
+    theme: s.theme,
+    activePage: s.activePage,
+    sidebarCollapsed: s.sidebarCollapsed,
   }),
   // Reviver: convert array back to Set
-  merge: (persisted: any, current) => ({
-    ...current,
-    ...(persisted ?? {}),
-    selectedAccounts: new Set<string>(persisted?.selectedAccounts ?? []),
-    expanded: new Set<number>(),
-  }),
+  merge: (persisted: any, current) => {
+    const theme = persisted?.theme ?? "dark";
+    document.documentElement.setAttribute("data-theme", theme);
+    return {
+      ...current,
+      ...(persisted ?? {}),
+      theme,
+      selectedAccounts: new Set<string>(persisted?.selectedAccounts ?? []),
+      expanded: new Set<number>(),
+    };
+  },
 }));
 
 export type { SortKey, SortDir };

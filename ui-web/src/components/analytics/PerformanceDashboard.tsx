@@ -7,7 +7,7 @@ export function PerformanceDashboard() {
   const { data } = usePerformance();
   if (!data || data.total_trades === 0) {
     return (
-      <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-4">
+      <div className="lift rounded-[var(--radius-md)] inner-card px-3 py-4">
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold mb-2">
           <Award size={11} className="text-[var(--color-accent)]" />
           Performance Dashboard
@@ -46,7 +46,7 @@ export function PerformanceDashboard() {
   const trendUp = curve.length > 1 && curve[curve.length - 1] > curve[0];
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Award size={11} className="text-[var(--color-accent)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -57,7 +57,7 @@ export function PerformanceDashboard() {
         </span>
       </div>
 
-      <div className="p-3 grid grid-cols-2 lg:grid-cols-4 gap-2">
+      <div className="p-4 grid grid-cols-2 lg:grid-cols-4 gap-2">
         <Metric
           label="Win Rate"
           value={`${winRate.toFixed(1)}%`}

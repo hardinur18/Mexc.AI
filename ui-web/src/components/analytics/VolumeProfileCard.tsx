@@ -25,7 +25,7 @@ export function VolumeProfileCard({ data, currentPrice, height = 220 }: Props) {
   const range = hi - lo || 1;
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <BarChart3 size={11} className="text-[var(--color-accent)]" />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -36,7 +36,7 @@ export function VolumeProfileCard({ data, currentPrice, height = 220 }: Props) {
         </span>
       </div>
 
-      <div className="flex gap-2 p-3">
+      <div className="flex gap-2 p-4">
         {/* Histogram */}
         <div className="relative" style={{ width: 110, height }}>
           {bins.map((b, i) => {

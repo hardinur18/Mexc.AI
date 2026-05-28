@@ -56,7 +56,7 @@ export function AccountBreakdownInner({ accounts }: AccountBreakdownProps) {
 
       {/* Distribution bar (stacked) */}
       {accounts.length > 1 && totalEquity > 0 && (
-        <div className="relative h-1.5 rounded-full overflow-hidden bg-white/5 mb-3">
+        <div className="relative h-1.5 rounded-full overflow-hidden bg-[var(--color-surface)] mb-3">
           {accounts.map((a, i) => {
             const pct = (a.equity / totalEquity) * 100;
             const offset = accounts
@@ -100,7 +100,7 @@ export function AccountBreakdownInner({ accounts }: AccountBreakdownProps) {
             <div
               key={a.id}
               className={cn(
-                "group inline-flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] hover:ring-[var(--color-border-strong)] transition",
+                "group inline-flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-md)] inner-card hover:ring-[var(--color-border-strong)] transition",
               )}
             >
               <span

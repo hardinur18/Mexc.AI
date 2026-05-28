@@ -93,7 +93,7 @@ export function SignalsPanelInner() {
 
   return (
     <div className="px-4 pb-4">
-      <div className="flex items-center justify-between py-2.5 text-[10px] text-[var(--color-fg-faint)] uppercase tracking-wider">
+      <div className="flex items-center justify-between py-2.5 text-[11px] text-[var(--color-fg-faint)] uppercase tracking-wider">
         <div className="flex items-center gap-3">
           <span>
             {filteredSignals.length} dari {data?.signal_count ?? 0} sinyal
@@ -129,7 +129,7 @@ export function SignalsPanelInner() {
           ]}
         />
         {/* View mode toggle */}
-        <div className="inline-flex items-center bg-white/5 ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] p-0.5">
+        <div className="inline-flex items-center bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] p-0.5">
           <button
             onClick={() => setViewMode("list")}
             className={cn(
@@ -187,7 +187,7 @@ export function SignalsPanelInner() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Cari koin..."
-            className="text-[10px] pl-7 pr-2 py-1 w-[140px] rounded-[var(--radius-sm)] bg-white/5 ring-1 ring-[var(--color-border)] text-[var(--color-fg)] focus:outline-none focus:ring-[var(--color-accent)]/40 placeholder:text-[var(--color-fg-faint)]"
+            className="text-[10px] pl-7 pr-2 py-1 w-[140px] rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] text-[var(--color-fg)] focus:outline-none focus:ring-[var(--color-accent)]/40 placeholder:text-[var(--color-fg-faint)]"
           />
         </div>
       </div>
@@ -268,7 +268,7 @@ function SegmentedControl<T extends string>({
   options: { value: T; label: string; icon?: React.ReactNode }[];
 }) {
   return (
-    <div className="inline-flex items-center bg-white/5 ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] p-0.5">
+    <div className="inline-flex items-center bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] p-0.5">
       {options.map((opt) => {
         const active = opt.value === value;
         const tone =
@@ -312,7 +312,7 @@ function ToolbarDropdown({
   onChange: (v: string) => void;
 }) {
   return (
-    <label className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider bg-white/5 ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] px-2 py-1 hover:bg-white/10 transition cursor-pointer">
+    <label className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] rounded-[var(--radius-md)] px-2 py-1 hover:bg-[var(--color-accent-soft)] transition cursor-pointer">
       {icon && <span className="text-[var(--color-fg-subtle)]">{icon}</span>}
       <span className="text-[var(--color-fg-subtle)]">{label}:</span>
       <select
@@ -375,13 +375,13 @@ function SignalRow({
         visible: { opacity: 1, x: 0 },
       }}
       transition={{ duration: 0.25, ease: [0.34, 1.4, 0.4, 1] }}
-      className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden hover:ring-[var(--color-border-strong)] transition-shadow"
+      className="rounded-[var(--radius-md)] bg-[var(--color-bg-elev)] ring-1 ring-[var(--color-border)] overflow-hidden hover:ring-[var(--color-border-strong)] transition-shadow"
     >
       {/* Compact summary row */}
       <button
         type="button"
         onClick={onToggle}
-        className="w-full grid grid-cols-[16px_1.2fr_56px_1fr_auto_auto] gap-3 items-center px-3 py-2 text-left hover:bg-white/[0.02] transition"
+        className="w-full grid grid-cols-[16px_1.2fr_56px_1fr_auto_auto] gap-3 items-center px-3 py-2 text-left row-hover transition"
       >
         <span className="text-[var(--color-fg-subtle)]">
           {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
@@ -508,7 +508,7 @@ function SignalRow({
             transition={{ duration: 0.3, ease: [0.34, 1.4, 0.4, 1] }}
             className="overflow-hidden border-t border-[var(--color-border)]/40"
           >
-            <div className="p-3 space-y-3 bg-gradient-to-b from-black/30 to-transparent">
+            <div className="p-4 space-y-3 detail-panel">
               {/* Row 1: Pattern Trigger + MTF Convergence Ring */}
               <div className="flex flex-wrap items-center gap-3">
                 {trigger && (
@@ -569,9 +569,9 @@ function SignalRow({
               </div>
 
               {/* Cascade start buttons per account */}
-              <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] p-3">
+              <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-elev)] ring-1 ring-[var(--color-border)] p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
+                  <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
                     Start Cascade
                   </div>
                   {cascadeDisabled && (
@@ -624,8 +624,8 @@ function SignalRow({
 
               {/* Confluence breakdown */}
               {signal.breakdown && signal.breakdown.length > 0 && (
-                <div className="rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] px-3 py-2.5">
-                  <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold mb-1.5">
+                <div className="rounded-[var(--radius-md)] bg-[var(--color-bg-elev)] ring-1 ring-[var(--color-border)] px-4 py-3">
+                  <div className="text-[11px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold mb-2">
                     Confluence breakdown
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -638,7 +638,7 @@ function SignalRow({
                             ? "bg-[var(--color-success-soft)] text-[var(--color-success)] ring-[var(--color-success)]/30"
                             : b.points < 0
                               ? "bg-[var(--color-danger-soft)] text-[var(--color-danger)] ring-[var(--color-danger)]/30"
-                              : "bg-white/5 text-[var(--color-fg-muted)] ring-[var(--color-border)]",
+                              : "bg-[var(--color-surface)] text-[var(--color-fg-muted)] ring-[var(--color-border)]",
                         )}
                       >
                         {b.points > 0 ? "+" : ""}
@@ -694,7 +694,7 @@ function CascadeStartButton({
         type="button"
         disabled={pending}
         onClick={() => handle("paper")}
-        className="text-[9px] uppercase tracking-wider px-2 py-1 hover:bg-white/[0.05] transition border-l border-[var(--color-border)]/40 disabled:opacity-40"
+        className="text-[9px] uppercase tracking-wider px-2 py-1 hover:bg-[var(--color-accent-soft)] transition border-l border-[var(--color-border)]/40 disabled:opacity-40"
         style={{ color: "var(--color-fg-muted)" }}
       >
         paper

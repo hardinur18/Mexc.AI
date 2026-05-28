@@ -108,7 +108,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
                 placeholder="Filter…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-7 pr-2 py-1 text-[11px] rounded-[var(--radius-sm)] bg-black/30 ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none"
+                className="w-full pl-7 pr-2 py-1 text-[11px] rounded-[var(--radius-sm)] bg-[var(--color-bg-elev-2)] ring-1 ring-[var(--color-border)] focus:ring-[var(--color-accent)] focus:outline-none"
               />
             </div>
           )}
@@ -193,8 +193,8 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
                   key={a.id}
                   type="button"
                   className={cn(
-                    "w-full text-left flex items-center gap-2.5 px-3 py-2 hover:bg-white/5 transition",
-                    checked && "bg-white/[0.03]",
+                    "w-full text-left flex items-center gap-2.5 px-3 py-2 hover:bg-[var(--color-accent-soft)] transition",
+                    checked && "bg-[var(--color-accent-soft)]/50",
                   )}
                   onClick={() => toggleAccount(a.id)}
                 >
@@ -208,7 +208,7 @@ export function AccountPicker({ summaries, onOpenSettings }: AccountPickerProps)
                     )}
                   >
                     <Checkbox.Indicator>
-                      <Check size={11} strokeWidth={3} className="text-white" />
+                      <Check size={11} strokeWidth={3} className="text-[var(--color-fg)]" />
                     </Checkbox.Indicator>
                   </Checkbox.Root>
 

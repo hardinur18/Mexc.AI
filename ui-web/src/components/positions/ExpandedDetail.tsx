@@ -85,42 +85,42 @@ export function ExpandedDetail({ p }: ExpandedDetailProps) {
     ((analytics?.cvd_historical?.absorption?.detected ? 1 : 0));
 
   return (
-    <div className="px-4 py-4 bg-gradient-to-b from-black/40 to-black/10">
+    <div className="detail-panel px-5 py-5">
       <Tabs defaultValue="entry">
-        <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+        <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
           <TabsList className="flex-wrap">
             <TabsTrigger value="entry">
-              <Target size={11} className="mr-1" /> Entry & Aksi
+              <Target size={12} className="mr-1.5" /> Entry & Aksi
               {validPlan && (
                 <span className="ml-1.5 inline-block w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse" />
               )}
             </TabsTrigger>
             <TabsTrigger value="technical">
-              <LineChart size={11} className="mr-1" /> Analisa Teknikal
+              <LineChart size={12} className="mr-1.5" /> Analisa Teknikal
               {patternCount > 0 && (
-                <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-accent)] text-white">
+                <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-accent)] text-[var(--color-bg)]">
                   {patternCount}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger value="smc">
-              <Crosshair size={11} className="mr-1" /> Smart Money
+              <Crosshair size={12} className="mr-1.5" /> Smart Money
               {smcAlertCount > 0 && (
-                <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-warning)] text-black">
+                <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-warning)] text-[var(--color-bg)]">
                   {smcAlertCount}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger value="macro">
-              <Globe size={11} className="mr-1" /> Makro & Flow
+              <Globe size={12} className="mr-1.5" /> Makro & Flow
               {macroAlertCount > 0 && (
-                <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-danger)] text-white">
+                <span className="ml-1 px-1 rounded text-[8px] font-bold bg-[var(--color-danger)] text-[var(--color-bg)]">
                   {macroAlertCount}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger value="vitals">
-              <Activity size={11} className="mr-1" /> Posisi Live
+              <Activity size={12} className="mr-1.5" /> Posisi Live
             </TabsTrigger>
           </TabsList>
           <span className="text-[9px] uppercase tracking-wider text-[var(--color-fg-faint)]">
@@ -133,7 +133,7 @@ export function ExpandedDetail({ p }: ExpandedDetailProps) {
           <div className="space-y-3">
             {/* Hero row: MTF convergence + Pattern trigger */}
             {(analytics?.mtf_convergence || analytics?.primary_pattern_trigger) && (
-              <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-stretch gap-3 px-3 py-2.5 rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)]">
+              <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] items-stretch gap-3 px-4 py-3 inner-card">
                 {analytics?.mtf_convergence ? (
                   <MtfConvergenceRing
                     data={analytics.mtf_convergence}

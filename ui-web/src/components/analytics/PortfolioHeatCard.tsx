@@ -19,7 +19,7 @@ export function PortfolioHeatCard() {
   const widthPct = Math.min(100, heat.heat.total_heat_pct * 4);
 
   return (
-    <div className="lift rounded-[var(--radius-md)] bg-black/25 ring-1 ring-[var(--color-border)] overflow-hidden">
+    <div className="lift rounded-[var(--radius-md)] inner-card overflow-hidden">
       <div className="px-3 py-2 flex items-center gap-2 border-b border-[var(--color-border)]/50">
         <Flame size={11} style={{ color: tone }} />
         <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)] font-semibold">
@@ -36,7 +36,7 @@ export function PortfolioHeatCard() {
         </span>
       </div>
 
-      <div className="p-3 space-y-3">
+      <div className="p-4 space-y-3">
         <div>
           <div className="flex items-baseline justify-between mb-1">
             <span
@@ -49,7 +49,7 @@ export function PortfolioHeatCard() {
               equity {fmt(heat.total_equity, 2)} USDT
             </span>
           </div>
-          <div className="relative h-1.5 rounded-full overflow-hidden bg-white/5">
+          <div className="relative h-1.5 rounded-full overflow-hidden bg-[var(--color-surface)]">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${widthPct}%` }}

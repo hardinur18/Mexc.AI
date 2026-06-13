@@ -30,6 +30,7 @@ from cascade import (
     list_journal_entries as cascade_list_journal,
 )
 from ws_client import WS_CLIENT
+from paper_bot import PaperBot
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -227,10 +228,14 @@ _DEPTH_TTL_SECONDS = 15
 # Per-interval kline cache for multi-timeframe analysis
 _klines_cache: dict[tuple[str, str], tuple[float, list[dict]]] = {}
 _KLINES_TTL_SECONDS = {
+    "Min1": 20,
+    "Min5": 45,
     "Min15": 60,
     "Min60": 180,
     "Hour4": 600,
     "Day1": 1800,
+    "Week1": 3600,
+    "Month1": 3600,
 }
 
 
@@ -248,6 +253,7 @@ def fetch_klines_cached(symbol: str, interval: str, count: int = 100) -> list[di
         "Min1": 60, "Min5": 300, "Min15": 900,
         "Min30": 1800, "Min60": 3600, "Hour1": 3600,
         "Hour4": 14400, "Hour8": 28800, "Day1": 86400,
+        "Week1": 604800, "Month1": 2592000,
     }.get(interval, 900)
     now_ms = int(time.time() * 1000)
     start_ms = now_ms - (count * sec_per_candle * 1000)
@@ -479,6 +485,338 @@ def _atr(bars: list[dict], period: int = 14) -> float | None:
     trs = [_true_range(bars[i - 1], bars[i]) for i in range(1, len(bars))]
     recent = trs[-period:]
     return sum(recent) / len(recent) if recent else None
+
+
+def _compute_dmi(bars: list[dict], period: int = 14) -> dict | None:
+    """Wilder DMI: +DI, -DI, and ADX."""
+    if len(bars) < period * 2:
+        return None
+
+    trs: list[float] = []
+    plus_dms: list[float] = []
+    minus_dms: list[float] = []
+    for i in range(1, len(bars)):
+        prev = bars[i - 1]
+        curr = bars[i]
+        up_move = curr["h"] - prev["h"]
+        down_move = prev["l"] - curr["l"]
+        plus_dm = up_move if up_move > down_move and up_move > 0 else 0.0
+        minus_dm = down_move if down_move > up_move and down_move > 0 else 0.0
+        trs.append(_true_range(prev, curr))
+        plus_dms.append(plus_dm)
+        minus_dms.append(minus_dm)
+
+    if len(trs) < period * 2 - 1:
+        return None
+
+    tr_smooth = sum(trs[:period])
+    plus_smooth = sum(plus_dms[:period])
+    minus_smooth = sum(minus_dms[:period])
+    dx_values: list[float] = []
+    plus_di = minus_di = 0.0
+
+    for i in range(period, len(trs)):
+        tr_smooth = tr_smooth - (tr_smooth / period) + trs[i]
+        plus_smooth = plus_smooth - (plus_smooth / period) + plus_dms[i]
+        minus_smooth = minus_smooth - (minus_smooth / period) + minus_dms[i]
+        if tr_smooth <= 0:
+            continue
+        plus_di = 100 * (plus_smooth / tr_smooth)
+        minus_di = 100 * (minus_smooth / tr_smooth)
+        di_sum = plus_di + minus_di
+        dx_values.append(0.0 if di_sum <= 0 else 100 * abs(plus_di - minus_di) / di_sum)
+
+    if len(dx_values) < period:
+        return None
+
+    adx = sum(dx_values[:period]) / period
+    for dx in dx_values[period:]:
+        adx = ((adx * (period - 1)) + dx) / period
+
+    return {
+        "pdi": round(plus_di, 2),
+        "mdi": round(minus_di, 2),
+        "adx": round(adx, 2),
+    }
+
+
+def _dmi_direction_context(analytics: dict, direction: str) -> dict:
+    """Score whether DMI confirms the proposed signal direction."""
+    rows = [
+        ("15m", analytics.get("dmi_15m"), 1),
+        ("1h", analytics.get("dmi_1h"), 2),
+        ("4h", analytics.get("dmi_4h"), 3),
+        ("1d", analytics.get("dmi_1d"), 2),
+    ]
+    support_points = 0
+    oppose_points = 0
+    support_labels: list[str] = []
+    oppose_labels: list[str] = []
+    key_confirm = False
+    strong_oppose = False
+    data_count = 0
+
+    for tf, dmi, weight in rows:
+        if not isinstance(dmi, dict):
+            continue
+        try:
+            pdi = float(dmi.get("pdi") or 0)
+            mdi = float(dmi.get("mdi") or 0)
+            adx = float(dmi.get("adx") or 0)
+        except (TypeError, ValueError):
+            continue
+        data_count += 1
+        diff = (pdi - mdi) if direction == "LONG" else (mdi - pdi)
+        label = f"{tf} +DI={pdi:.0f} -DI={mdi:.0f} ADX={adx:.0f}"
+        if diff >= 5 and adx >= 18:
+            support_points += weight
+            support_labels.append(label)
+            if tf in ("1h", "4h"):
+                key_confirm = True
+        elif diff <= -5 and adx >= 18:
+            oppose_points += weight
+            oppose_labels.append(label)
+            if diff <= -8 and adx >= 25 and tf in ("1h", "4h", "1d"):
+                strong_oppose = True
+
+    confirmed = support_points >= 3 and key_confirm and not strong_oppose
+    score_delta = 0
+    score_cap: int | None = None
+    reason = "DMI netral"
+
+    if data_count == 0:
+        return {
+            "confirmed": False,
+            "score_delta": 0,
+            "score_cap": None,
+            "reason": "DMI data belum tersedia",
+            "support": support_labels,
+            "oppose": oppose_labels,
+        }
+
+    if support_points >= 6 and not strong_oppose:
+        score_delta += 16
+        reason = "DMI multi-TF confirm kuat"
+    elif support_points >= 4 and not strong_oppose:
+        score_delta += 10
+        reason = "DMI multi-TF confirm"
+    elif confirmed:
+        score_delta += 6
+        reason = "DMI early confirm"
+
+    if strong_oppose:
+        score_delta -= 30
+        score_cap = 59
+        reason = "DMI kuat melawan arah sinyal"
+    elif oppose_points >= 5:
+        score_delta -= 20
+        score_cap = 69
+        reason = "DMI mayoritas melawan arah sinyal"
+    elif oppose_points >= 3:
+        score_delta -= 12
+        score_cap = 79
+        reason = "DMI sebagian melawan arah sinyal"
+    elif not confirmed:
+        score_delta -= 8
+        score_cap = 79
+        reason = "DMI belum confirm super signal"
+
+    return {
+        "confirmed": confirmed,
+        "score_delta": score_delta,
+        "score_cap": score_cap,
+        "reason": reason,
+        "support": support_labels,
+        "oppose": oppose_labels,
+    }
+
+
+def _pivot_levels_from_bars(bars: list[dict]) -> list[dict]:
+    if not bars:
+        return []
+    idx = -2 if len(bars) >= 2 else -1
+    try:
+        h = float(bars[idx]["h"])
+        l = float(bars[idx]["l"])
+        c = float(bars[idx]["c"])
+    except Exception:
+        return []
+    if h <= l:
+        return []
+    pp = (h + l + c) / 3
+    rng = h - l
+    return [
+        {"label": "R2", "price": round(pp + rng, 8), "kind": "resistance", "strength": 9},
+        {"label": "R1", "price": round(2 * pp - l, 8), "kind": "resistance", "strength": 10},
+        {"label": "Fib 38.2", "price": round(h - rng * 0.382, 8), "kind": "pivot", "strength": 8},
+        {"label": "PP", "price": round(pp, 8), "kind": "pivot", "strength": 9},
+        {"label": "Fib 50.0", "price": round(h - rng * 0.5, 8), "kind": "pivot", "strength": 8},
+        {"label": "Fib 61.8", "price": round(h - rng * 0.618, 8), "kind": "pivot", "strength": 8},
+        {"label": "S1", "price": round(2 * pp - h, 8), "kind": "support", "strength": 10},
+        {"label": "S2", "price": round(pp - rng, 8), "kind": "support", "strength": 9},
+    ]
+
+
+def compute_support_resistance_confluence(
+    analytics: dict,
+    direction: str,
+    current_price: float | None,
+    daily_bars: list[dict] | None = None,
+) -> dict:
+    """Summarize whether current price is actually sitting at a useful S/R area."""
+    if not current_price or current_price <= 0:
+        return {
+            "score": 0,
+            "verdict": "no-price",
+            "score_delta": 0,
+            "score_cap": None,
+            "levels": [],
+            "nearest_support": None,
+            "nearest_resistance": None,
+            "warnings": ["current price unavailable"],
+        }
+
+    atr_pct = analytics.get("atr_pct_4h")
+    try:
+        near_pct = max(0.8, min(3.0, float(atr_pct or 1.5) * 0.8))
+    except Exception:
+        near_pct = 1.2
+
+    levels: list[dict] = []
+
+    def add_level(
+        label: str,
+        price: float | None,
+        kind: str,
+        strength: float,
+        side: str | None = None,
+        timeframe: str | None = None,
+        zone_low: float | None = None,
+        zone_high: float | None = None,
+    ) -> None:
+        if price is None:
+            return
+        try:
+            p = float(price)
+        except Exception:
+            return
+        if p <= 0:
+            return
+        if side is None:
+            side = "support" if p < current_price else "resistance" if p > current_price else "pivot"
+        in_zone = False
+        if zone_low is not None and zone_high is not None:
+            in_zone = zone_low <= current_price <= zone_high
+        distance_pct = 0.0 if in_zone else ((p - current_price) / current_price * 100)
+        if abs(distance_pct) > max(near_pct * 3, 5.0):
+            return
+        levels.append({
+            "label": label,
+            "kind": kind,
+            "side": side,
+            "price": round(p, 8),
+            "distance_pct": round(distance_pct, 3),
+            "strength": round(strength, 2),
+            "timeframe": timeframe,
+            "in_zone": in_zone,
+            "zone_low": round(zone_low, 8) if zone_low is not None else None,
+            "zone_high": round(zone_high, 8) if zone_high is not None else None,
+        })
+
+    for lvl in _pivot_levels_from_bars(daily_bars or []):
+        add_level(lvl["label"], lvl["price"], lvl["kind"], lvl["strength"], timeframe="1D")
+
+    for tf, key in [("1D", "sd_zones_1d"), ("4H", "sd_zones_4h"), ("1H", "sd_zones_1h")]:
+        zones = analytics.get(key) or {}
+        for z in zones.get("demand_zones") or []:
+            strength = 14 + (6 if z.get("fresh") else 0) + min(6, float(z.get("impulse_strength") or 0) * 1.5)
+            add_level("Demand", z.get("mid"), "demand_zone", strength, side="support", timeframe=tf,
+                      zone_low=z.get("low"), zone_high=z.get("high"))
+        for z in zones.get("supply_zones") or []:
+            strength = 14 + (6 if z.get("fresh") else 0) + min(6, float(z.get("impulse_strength") or 0) * 1.5)
+            add_level("Supply", z.get("mid"), "supply_zone", strength, side="resistance", timeframe=tf,
+                      zone_low=z.get("low"), zone_high=z.get("high"))
+
+    for tf, key in [("1D", "volume_profile_1d"), ("4H", "volume_profile_4h"), ("1H", "volume_profile_1h")]:
+        vp = analytics.get(key) or {}
+        add_level("POC", vp.get("poc"), "volume_poc", 16, timeframe=tf)
+        add_level("VAH", vp.get("vah"), "value_area", 10, timeframe=tf)
+        add_level("VAL", vp.get("val"), "value_area", 10, timeframe=tf)
+        for node in (vp.get("hvn") or [])[:3]:
+            add_level("HVN", node.get("price"), "volume_hvn", 9 + float(node.get("volume_ratio") or 0), timeframe=tf)
+
+    add_level("VWAP 4H", analytics.get("vwap_4h"), "vwap", 11, timeframe="4H")
+    add_level("AVWAP low", analytics.get("anchored_vwap_swing_low"), "anchored_vwap", 13, timeframe="4H")
+    add_level("AVWAP high", analytics.get("anchored_vwap_swing_high"), "anchored_vwap", 13, timeframe="4H")
+    add_level("7D low", analytics.get("low_7d"), "range_low", 11, side="support", timeframe="7D")
+    add_level("7D high", analytics.get("high_7d"), "range_high", 11, side="resistance", timeframe="7D")
+    add_level("30D low", analytics.get("low_30d"), "range_low", 12, side="support", timeframe="30D")
+    add_level("30D high", analytics.get("high_30d"), "range_high", 12, side="resistance", timeframe="30D")
+
+    structure = analytics.get("market_structure_4h") or {}
+    add_level("Swing low", structure.get("last_swing_low"), "swing", 13, side="support", timeframe="4H")
+    add_level("Swing high", structure.get("last_swing_high"), "swing", 13, side="resistance", timeframe="4H")
+
+    orderbook = analytics.get("orderbook_heatmap") or {}
+    for wall in (orderbook.get("bid_walls") or [])[:2]:
+        add_level("Bid wall", wall.get("price"), "orderbook_wall", 10, side="support", timeframe="live")
+    for wall in (orderbook.get("ask_walls") or [])[:2]:
+        add_level("Ask wall", wall.get("price"), "orderbook_wall", 10, side="resistance", timeframe="live")
+
+    levels.sort(key=lambda x: (abs(x["distance_pct"]), -x["strength"]))
+    supports = [l for l in levels if l["side"] == "support" and l["price"] <= current_price * 1.002]
+    resistances = [l for l in levels if l["side"] == "resistance" and l["price"] >= current_price * 0.998]
+    nearest_support = min(supports, key=lambda x: abs(x["distance_pct"]), default=None)
+    nearest_resistance = min(resistances, key=lambda x: abs(x["distance_pct"]), default=None)
+
+    target_side = "support" if direction == "LONG" else "resistance" if direction == "SHORT" else None
+    obstacle_side = "resistance" if target_side == "support" else "support" if target_side == "resistance" else None
+    target_score = 0.0
+    obstacle_score = 0.0
+    warnings: list[str] = []
+    for lvl in levels:
+        closeness = max(0.0, 1.0 - abs(lvl["distance_pct"]) / max(near_pct, 0.1))
+        weighted = lvl["strength"] * (1.0 if lvl.get("in_zone") else 0.35 + 0.65 * closeness)
+        if lvl["side"] == target_side:
+            target_score += weighted
+        elif lvl["side"] == obstacle_side and abs(lvl["distance_pct"]) <= near_pct * 1.5:
+            obstacle_score += weighted
+
+    score = max(0, min(100, int(round(target_score * 1.2 - obstacle_score * 0.7))))
+    score_delta = 0
+    score_cap = None
+    if direction in ("LONG", "SHORT"):
+        if score >= 75:
+            score_delta = 10
+        elif score >= 60:
+            score_delta = 5
+        elif score < 35:
+            score_delta = -12
+            score_cap = 69
+            warnings.append("not near a strong directional S/R level")
+        elif score < 50:
+            score_delta = -6
+            score_cap = 79
+            warnings.append("S/R confluence is thin")
+        if obstacle_score >= 25:
+            score_delta -= 8
+            score_cap = min(score_cap or 100, 79)
+            warnings.append("opposing level is too close")
+
+    verdict = "strong" if score >= 75 else "valid" if score >= 60 else "thin" if score >= 40 else "weak"
+    return {
+        "score": score,
+        "verdict": verdict,
+        "near_window_pct": round(near_pct, 2),
+        "score_delta": score_delta,
+        "score_cap": score_cap,
+        "target_score": round(target_score, 2),
+        "obstacle_score": round(obstacle_score, 2),
+        "nearest_support": nearest_support,
+        "nearest_resistance": nearest_resistance,
+        "levels": levels[:12],
+        "warnings": warnings,
+    }
 
 
 def _anchor_vwap(bars: list[dict], anchor_idx: int) -> float | None:
@@ -2497,6 +2835,31 @@ def get_all_tickers() -> dict:
     return out
 
 
+def _ticker_change_24h_pct(ticker: dict) -> float | None:
+    raw = ticker.get("riseFallRate")
+    if raw is None:
+        rates = ticker.get("riseFallRates")
+        if isinstance(rates, dict):
+            raw = rates.get("r")
+    try:
+        val = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return val * 100 if abs(val) <= 2 else val
+
+
+def _ranked_24h_gainers(tickers: dict, symbols: list[str]) -> tuple[dict[str, int], dict[str, float], int]:
+    rows: list[tuple[str, float]] = []
+    for sym in symbols:
+        pct = _ticker_change_24h_pct(tickers.get(sym) or {})
+        if pct is not None:
+            rows.append((sym, pct))
+    rows.sort(key=lambda item: item[1], reverse=True)
+    ranks = {sym: idx for idx, (sym, _) in enumerate(rows, start=1)}
+    changes = {sym: pct for sym, pct in rows}
+    return ranks, changes, len(rows)
+
+
 def _compute_rsi(closes: list[float], period: int = 14) -> float | None:
     """Wilder's RSI."""
     if len(closes) < period + 1:
@@ -2622,6 +2985,7 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
         "market_regime": None,
         "liquidation_zones": None,
         "btc_correlation_alignment": None,
+        "support_resistance": None,
         # ── Phase 5 Group C: order flow deep
         "cvd_historical": None,
         # Multi-timeframe RSI
@@ -2629,6 +2993,10 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
         "rsi_1h": None,
         "rsi_4h": None,
         "rsi_1d": None,
+        "dmi_15m": None,
+        "dmi_1h": None,
+        "dmi_4h": None,
+        "dmi_1d": None,
         "mtf_oversold_count": 0,  # how many TFs are oversold (<30)
         "mtf_overbought_count": 0,
         # Bollinger Bands (4h)
@@ -2646,6 +3014,7 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
         # Capitulation: volume spike at low
         "volume_capitulation": False,
         "volume_24h_usdt": None,
+        "change_24h_pct": None,
         # OI & funding
         "oi_delta_5m_pct": None,
         "funding_rate_pct": None,
@@ -2716,6 +3085,10 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
     out["rsi_1h"] = round(rsi_1h, 2) if rsi_1h is not None else None
     out["rsi_4h"] = round(rsi_4h, 2) if rsi_4h is not None else None
     out["rsi_1d"] = round(rsi_1d, 2) if rsi_1d is not None else None
+    out["dmi_15m"] = _compute_dmi(tf_closes["Min15"][1], 14)
+    out["dmi_1h"] = _compute_dmi(tf_closes["Min60"][1], 14)
+    out["dmi_4h"] = _compute_dmi(tf_closes["Hour4"][1], 14)
+    out["dmi_1d"] = _compute_dmi(tf_closes["Day1"][1], 14)
 
     rsi_vals = [v for v in [rsi_15, rsi_1h, rsi_4h, rsi_1d] if v is not None]
     out["mtf_oversold_count"] = sum(1 for v in rsi_vals if v < 30)
@@ -2914,6 +3287,8 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
             out["oi_delta_5m_pct"] = round(_oi_delta_pct(symbol) or 0, 3)
         vol_24h_usdt = float(tk.get("amount24") or 0)
         out["volume_24h_usdt"] = vol_24h_usdt
+        change_24h_pct = _ticker_change_24h_pct(tk)
+        out["change_24h_pct"] = round(change_24h_pct, 3) if change_24h_pct is not None else None
 
     # ─── Funding rate + 1h trend ───
     funding = get_funding_cached(symbol)
@@ -2982,6 +3357,10 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
     fr = out["funding_rate_pct"]
     rsi_4h_v = out["rsi_4h"] or 50
     rsi_1d_v = out["rsi_1d"] or 50
+    dmi_long_context = _dmi_direction_context(out, "LONG")
+    dmi_short_context = _dmi_direction_context(out, "SHORT")
+    out["dmi_long_context"] = dmi_long_context
+    out["dmi_short_context"] = dmi_short_context
 
     # ─── HARD GATES (must all pass to even consider dip-buy) ───
     gate_volume = (
@@ -3275,7 +3654,19 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
             breakdown.append({"name": "✓ Funding deepening negative",
                               "points": 8, "value": "1h trend"})
 
+        dmi_delta = dmi_long_context.get("score_delta") or 0
+        dmi_cap = dmi_long_context.get("score_cap")
+        if dmi_delta != 0 or dmi_cap is not None:
+            score += dmi_delta
+            breakdown.append({
+                "name": f"DMI filter LONG: {dmi_long_context.get('reason')}",
+                "points": dmi_delta,
+                "value": "; ".join((dmi_long_context.get("support") or dmi_long_context.get("oppose") or [])[:2]),
+            })
+
         final_score = max(0, min(100, score))  # no baseline
+        if dmi_cap is not None:
+            final_score = min(final_score, dmi_cap)
 
     out["confluence_score"] = final_score
     out["confluence_breakdown"] = breakdown
@@ -3477,7 +3868,19 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
                                     "points": seq_bonus_s,
                                     "value": "15m < 1h < 4h (turning down first)"})
 
+        dmi_delta_s = dmi_short_context.get("score_delta") or 0
+        dmi_cap_s = dmi_short_context.get("score_cap")
+        if dmi_delta_s != 0 or dmi_cap_s is not None:
+            short_score += dmi_delta_s
+            short_breakdown.append({
+                "name": f"DMI filter SHORT: {dmi_short_context.get('reason')}",
+                "points": dmi_delta_s,
+                "value": "; ".join((dmi_short_context.get("support") or dmi_short_context.get("oppose") or [])[:2]),
+            })
+
         short_final = max(0, min(100, short_score))
+        if dmi_cap_s is not None:
+            short_final = min(short_final, dmi_cap_s)
     else:
         short_final = 0
         if not short_gate_volume:
@@ -3489,6 +3892,8 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
             short_breakdown.append({"name": "✗ GATE: belum cukup pump", "points": 0,
                                     "value": "perlu jauh dari 7d low"})
 
+    out["dmi_long_score_cap"] = dmi_long_context.get("score_cap")
+    out["dmi_short_score_cap"] = dmi_short_context.get("score_cap")
     out["score_short"] = short_final
 
     # ═══ Pick direction ═══
@@ -3510,6 +3915,30 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
     # adjustments BEFORE verdict + entry_plan (was after, causing inconsistency)
     # ═══════════════════════════════════════════════════════════════════
     direction = out["signal_direction"]
+    sr_current = bars_4h[-1]["c"] if bars_4h else None
+    out["support_resistance"] = compute_support_resistance_confluence(
+        out, direction, sr_current, bars_1d_smc
+    )
+    if direction in ("LONG", "SHORT"):
+        sr_delta = out["support_resistance"].get("score_delta") or 0
+        sr_cap = out["support_resistance"].get("score_cap")
+        if sr_delta != 0 or sr_cap is not None:
+            out["confluence_score"] = max(0, min(100, out["confluence_score"] + sr_delta))
+            out["confluence_breakdown"].append({
+                "name": f"S/R confluence: {out['support_resistance'].get('verdict')}",
+                "points": sr_delta,
+                "value": ", ".join(
+                    lvl.get("label", "") for lvl in (out["support_resistance"].get("levels") or [])[:3]
+                ),
+            })
+        if sr_cap is not None and out["confluence_score"] > sr_cap:
+            before_sr_cap = out["confluence_score"]
+            out["confluence_score"] = sr_cap
+            out["confluence_breakdown"].append({
+                "name": "S/R final cap",
+                "points": sr_cap - before_sr_cap,
+                "value": "super signal requires real level confluence",
+            })
 
     # Primary pattern trigger (uses rich_patterns_early which is computed earlier)
     if direction in ("LONG", "SHORT"):
@@ -3648,7 +4077,36 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
                 "value": ", ".join(a["source"] for a in macro_adjustments_pre),
             })
 
+    selected_dmi_cap = None
+    if direction == "LONG":
+        selected_dmi_cap = out.get("dmi_long_score_cap")
+    elif direction == "SHORT":
+        selected_dmi_cap = out.get("dmi_short_score_cap")
+    if selected_dmi_cap is not None and out["confluence_score"] > selected_dmi_cap:
+        before_dmi_cap = out["confluence_score"]
+        out["confluence_score"] = selected_dmi_cap
+        out["confluence_breakdown"].append({
+            "name": "DMI final cap",
+            "points": selected_dmi_cap - before_dmi_cap,
+            "value": "Super signal requires DMI confirmation",
+        })
+
     # ─── Verdict + sizing — direction-aware (now using post-adjustment score) ───
+    selected_sr_cap = (out.get("support_resistance") or {}).get("score_cap")
+    if selected_sr_cap is not None and out["confluence_score"] > selected_sr_cap:
+        before_sr_cap = out["confluence_score"]
+        out["confluence_score"] = selected_sr_cap
+        out["confluence_breakdown"].append({
+            "name": "S/R final cap",
+            "points": selected_sr_cap - before_sr_cap,
+            "value": "Super signal requires support/resistance confluence",
+        })
+
+    if direction == "LONG":
+        out["score_long"] = out["confluence_score"]
+    elif direction == "SHORT":
+        out["score_short"] = out["confluence_score"]
+
     fs = out["confluence_score"]
 
     if direction == "NONE" or fs < 25:
@@ -3659,10 +4117,34 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
         out["entry_plan"] = None
     else:
         # Tier name + direction
-        if fs >= 80:
-            tier = "BORONG"
-            tier_detail = "Setup ekstrem — masuk gede"
-            sz = 5.0
+        if fs >= 90:
+            tier = "SUPER SETUP"
+            tier_detail = "Validasi manual dulu; jangan tambah posisi tanpa invalidation"
+            sz = 2.0
+        elif fs >= 80:
+            tier = "SIAGA KUAT"
+            tier_detail = "Confluence kuat, tetap tunggu konfirmasi entry"
+            sz = 1.5
+        elif fs >= 70:
+            tier = "RADAR KUAT"
+            tier_detail = "Setup menarik, sizing kecil dan wajib invalidation"
+            sz = 1.0
+        elif fs >= 60:
+            tier = "RADAR"
+            tier_detail = "Sinyal valid, pantau dulu"
+            sz = 0.5
+        elif fs >= 45:
+            tier = "WATCH"
+            tier_detail = "Ada potensi, belum untuk agresif"
+            sz = 0.25
+        else:
+            tier = "SABAR"
+            tier_detail = "Belum cukup kuat"
+            sz = 0.0
+        if True:
+            tier = tier
+            tier_detail = tier_detail
+            sz = sz
         elif fs >= 70:
             tier = "AKUMULASI KUAT"
             tier_detail = "Confluence kuat + konfirmasi pembalikan"
@@ -3679,6 +4161,27 @@ def compute_analytics(symbol: str, lite: bool = False) -> dict:
             tier = "SABAR"
             tier_detail = "Belum cukup kuat"
             sz = 0.0
+
+        if fs >= 90:
+            tier = "SUPER SETUP"
+            tier_detail = "Validasi manual dulu; jangan tambah posisi tanpa invalidation"
+            sz = 2.0
+        elif fs >= 80:
+            tier = "SIAGA KUAT"
+            tier_detail = "Confluence kuat, tetap tunggu konfirmasi entry"
+            sz = 1.5
+        elif fs >= 70:
+            tier = "RADAR KUAT"
+            tier_detail = "Setup menarik, sizing kecil dan wajib invalidation"
+            sz = 1.0
+        elif fs >= 60:
+            tier = "RADAR"
+            tier_detail = "Sinyal valid, pantau dulu"
+            sz = 0.5
+        elif fs >= 45:
+            tier = "WATCH"
+            tier_detail = "Ada potensi, belum untuk agresif"
+            sz = 0.25
 
         out["verdict"] = f"{tier} {direction}"
         out["verdict_detail"] = tier_detail
@@ -4437,6 +4940,305 @@ def scan_quality_symbols() -> list[str]:
     return sorted(out)
 
 
+def _breakout_metrics(bars: list[dict], lookback: int) -> dict:
+    if len(bars) < lookback + 1:
+        return {}
+    last = bars[-1]
+    prev = bars[-lookback - 1:-1]
+    prev_high = max(b["h"] for b in prev)
+    prev_low = min(b["l"] for b in prev)
+    close = last["c"]
+    avg_vol = sum(b["v"] for b in prev) / max(1, len(prev))
+    vol_ratio = (last["v"] / avg_vol) if avg_vol > 0 else None
+    body = abs(last["c"] - last["o"])
+    rng = max(last["h"] - last["l"], 1e-12)
+    dist_to_high_pct = ((prev_high - close) / prev_high * 100) if prev_high > 0 else None
+    dist_to_low_pct = ((close - prev_low) / prev_low * 100) if prev_low > 0 else None
+    return {
+        "lookback": lookback,
+        "close": round(close, 8),
+        "prev_high": round(prev_high, 8),
+        "prev_low": round(prev_low, 8),
+        "breakout_up": close > prev_high,
+        "breakdown_down": close < prev_low,
+        "near_high": dist_to_high_pct is not None and 0 <= dist_to_high_pct <= 1.2,
+        "near_low": dist_to_low_pct is not None and 0 <= dist_to_low_pct <= 1.2,
+        "retest_up": close > prev_high and last["l"] <= prev_high,
+        "retest_down": close < prev_low and last["h"] >= prev_low,
+        "breakout_pct": round((close - prev_high) / prev_high * 100, 3) if prev_high > 0 else None,
+        "breakdown_pct": round((prev_low - close) / prev_low * 100, 3) if prev_low > 0 else None,
+        "distance_to_high_pct": round(dist_to_high_pct, 3) if dist_to_high_pct is not None else None,
+        "distance_to_low_pct": round(dist_to_low_pct, 3) if dist_to_low_pct is not None else None,
+        "volume_ratio": round(vol_ratio, 3) if vol_ratio is not None else None,
+        "body_ratio": round(body / rng, 3),
+    }
+
+
+def _score_dmi_momentum(dmi: dict | None, direction: str) -> tuple[int, int | None, str | None]:
+    if not isinstance(dmi, dict):
+        return 0, None, None
+    try:
+        pdi = float(dmi.get("pdi") or 0)
+        mdi = float(dmi.get("mdi") or 0)
+        adx = float(dmi.get("adx") or 0)
+    except Exception:
+        return 0, None, None
+    diff = (pdi - mdi) if direction == "LONG" else (mdi - pdi)
+    label = f"+DI={pdi:.0f} -DI={mdi:.0f} ADX={adx:.0f}"
+    if diff >= 8 and adx >= 30:
+        return 18, None, label
+    if diff >= 5 and adx >= 25:
+        return 14, None, label
+    if diff >= 3 and adx >= 18:
+        return 8, None, label
+    if diff <= -8 and adx >= 25:
+        return -22, 69, label
+    if diff <= -5 and adx >= 18:
+        return -12, 79, label
+    return 0, None, label
+
+
+def _momentum_score_side(
+    analytics: dict,
+    bars_1h: list[dict],
+    bars_4h: list[dict],
+    direction: str,
+) -> tuple[int, list[dict], dict, int | None]:
+    score = 0
+    cap: int | None = None
+    breakdown: list[dict] = []
+
+    rsi_15m = analytics.get("rsi_15m")
+    rsi_1h = analytics.get("rsi_1h")
+    rsi_4h = analytics.get("rsi_4h")
+    rsi_1d = analytics.get("rsi_1d")
+
+    def add(name: str, points: int, value: str | float | int | None = "") -> None:
+        nonlocal score
+        score += points
+        breakdown.append({"name": name, "points": points, "value": value or ""})
+
+    def lower_cap(v: int | None) -> None:
+        nonlocal cap
+        if v is not None:
+            cap = min(cap if cap is not None else 100, v)
+
+    if direction == "LONG":
+        if rsi_1h is not None and rsi_1h >= 80:
+            add("RSI 1H momentum >=80", 18, f"{rsi_1h:.0f}")
+        elif rsi_1h is not None and rsi_1h >= 75:
+            add("RSI 1H early momentum", 10, f"{rsi_1h:.0f}")
+        if rsi_4h is not None and rsi_4h >= 70:
+            add("RSI 4H trend hot", 14, f"{rsi_4h:.0f}")
+        elif rsi_4h is not None and rsi_4h >= 65:
+            add("RSI 4H trend building", 8, f"{rsi_4h:.0f}")
+        if rsi_15m is not None and rsi_15m >= 70:
+            add("RSI 15M confirms push", 5, f"{rsi_15m:.0f}")
+    else:
+        if rsi_1h is not None and rsi_1h <= 20:
+            add("RSI 1H downside momentum <=20", 18, f"{rsi_1h:.0f}")
+        elif rsi_1h is not None and rsi_1h <= 25:
+            add("RSI 1H early downside momentum", 10, f"{rsi_1h:.0f}")
+        if rsi_4h is not None and rsi_4h <= 30:
+            add("RSI 4H trend cold", 14, f"{rsi_4h:.0f}")
+        elif rsi_4h is not None and rsi_4h <= 35:
+            add("RSI 4H downtrend building", 8, f"{rsi_4h:.0f}")
+        if rsi_15m is not None and rsi_15m <= 30:
+            add("RSI 15M confirms push", 5, f"{rsi_15m:.0f}")
+
+    for tf, dmi in [("1H", analytics.get("dmi_1h")), ("4H", analytics.get("dmi_4h"))]:
+        pts, dmi_cap, label = _score_dmi_momentum(dmi, direction)
+        if pts:
+            add(f"DMI {tf} momentum {'confirm' if pts > 0 else 'against'}", pts, label)
+        lower_cap(dmi_cap)
+
+    b20_1h = _breakout_metrics(bars_1h, 20)
+    b55_1h = _breakout_metrics(bars_1h, 55)
+    b20_4h = _breakout_metrics(bars_4h, 20)
+
+    if direction == "LONG":
+        if b20_1h.get("breakout_up"):
+            add("Close breaks 1H high-20", 20, f"{b20_1h.get('breakout_pct')}%")
+        elif b20_1h.get("near_high"):
+            add("Price compressing near 1H high-20", 10, f"{b20_1h.get('distance_to_high_pct')}%")
+        if b55_1h.get("breakout_up"):
+            add("Close breaks 1H high-55", 15, f"{b55_1h.get('breakout_pct')}%")
+        elif b55_1h.get("near_high"):
+            add("Price near 1H high-55", 8, f"{b55_1h.get('distance_to_high_pct')}%")
+        if b20_4h.get("breakout_up"):
+            add("Close breaks 4H high-20", 18, f"{b20_4h.get('breakout_pct')}%")
+        elif b20_4h.get("near_high"):
+            add("Price near 4H high-20", 8, f"{b20_4h.get('distance_to_high_pct')}%")
+    else:
+        if b20_1h.get("breakdown_down"):
+            add("Close breaks 1H low-20", 20, f"{b20_1h.get('breakdown_pct')}%")
+        elif b20_1h.get("near_low"):
+            add("Price compressing near 1H low-20", 10, f"{b20_1h.get('distance_to_low_pct')}%")
+        if b55_1h.get("breakdown_down"):
+            add("Close breaks 1H low-55", 15, f"{b55_1h.get('breakdown_pct')}%")
+        elif b55_1h.get("near_low"):
+            add("Price near 1H low-55", 8, f"{b55_1h.get('distance_to_low_pct')}%")
+        if b20_4h.get("breakdown_down"):
+            add("Close breaks 4H low-20", 18, f"{b20_4h.get('breakdown_pct')}%")
+        elif b20_4h.get("near_low"):
+            add("Price near 4H low-20", 8, f"{b20_4h.get('distance_to_low_pct')}%")
+
+    if direction == "LONG":
+        has_breakout_structure = any(
+            b.get("breakout_up") or b.get("near_high") for b in (b20_1h, b55_1h, b20_4h)
+        )
+    else:
+        has_breakout_structure = any(
+            b.get("breakdown_down") or b.get("near_low") for b in (b20_1h, b55_1h, b20_4h)
+        )
+    if not has_breakout_structure:
+        add("Not near breakout structure", -18, "needs range high/low pressure")
+        lower_cap(59)
+
+    vol_ratio = b20_1h.get("volume_ratio")
+    if vol_ratio is not None:
+        if vol_ratio >= 2.0:
+            add("Volume expansion 1H >=2x", 16, f"{vol_ratio:.2f}x")
+        elif vol_ratio >= 1.5:
+            add("Volume expansion 1H >=1.5x", 10, f"{vol_ratio:.2f}x")
+        elif vol_ratio >= 1.2:
+            add("Volume building 1H", 5, f"{vol_ratio:.2f}x")
+        elif vol_ratio < 0.9:
+            add("Breakout volume weak", -10, f"{vol_ratio:.2f}x")
+            lower_cap(69)
+
+    trend_4h = analytics.get("trend_4h")
+    if direction == "LONG":
+        if trend_4h == "uptrend":
+            add("4H uptrend alignment", 8, "uptrend")
+        elif trend_4h == "downtrend":
+            add("4H trend against LONG", -15, "downtrend")
+            lower_cap(69)
+    else:
+        if trend_4h == "downtrend":
+            add("4H downtrend alignment", 8, "downtrend")
+        elif trend_4h == "uptrend":
+            add("4H trend against SHORT", -15, "uptrend")
+            lower_cap(69)
+
+    vwap_dist = analytics.get("vwap_dist_pct")
+    if vwap_dist is not None:
+        if direction == "LONG" and vwap_dist > 0:
+            add("Price above VWAP", 6, f"{vwap_dist:.2f}%")
+        elif direction == "SHORT" and vwap_dist < 0:
+            add("Price below VWAP", 6, f"{vwap_dist:.2f}%")
+        else:
+            add("VWAP against momentum", -6, f"{vwap_dist:.2f}%")
+
+    funding_pct = analytics.get("funding_rate_pct")
+    if funding_pct is not None:
+        if direction == "LONG" and funding_pct > 0.20:
+            add("Funding too crowded for LONG", -12, f"{funding_pct:.4f}%")
+            lower_cap(79)
+        elif direction == "SHORT" and funding_pct < -0.20:
+            add("Funding too crowded for SHORT", -12, f"{funding_pct:.4f}%")
+            lower_cap(79)
+
+    extreme_rsi = (
+        direction == "LONG" and rsi_1h is not None and rsi_1h >= 92
+    ) or (
+        direction == "SHORT" and rsi_1h is not None and rsi_1h <= 8
+    )
+    if extreme_rsi and (vol_ratio is None or vol_ratio < 1.5):
+        add("Extreme RSI without volume follow-through", -14, f"vol {vol_ratio or 0:.2f}x")
+        lower_cap(79)
+
+    context = {
+        "breakout_1h_20": b20_1h,
+        "breakout_1h_55": b55_1h,
+        "breakout_4h_20": b20_4h,
+        "rsi_15m": rsi_15m,
+        "rsi_1h": rsi_1h,
+        "rsi_4h": rsi_4h,
+        "rsi_1d": rsi_1d,
+        "volume_ratio_1h": vol_ratio,
+        "score_cap": cap,
+    }
+    final = max(0, min(100, score))
+    if cap is not None:
+        final = min(final, cap)
+    return final, breakdown, context, cap
+
+
+def compute_momentum_signal(symbol: str) -> dict:
+    base = compute_analytics(symbol, lite=True)
+    bars_1h = fetch_klines_cached(symbol, "Min60", 80)
+    bars_4h = fetch_klines_cached(symbol, "Hour4", 80)
+    if len(bars_1h) < 56 or len(bars_4h) < 21:
+        return {**base, "signal_direction": "NONE", "confluence_score": 0, "confluence_breakdown": []}
+
+    long_score, long_breakdown, long_context, _ = _momentum_score_side(base, bars_1h, bars_4h, "LONG")
+    short_score, short_breakdown, short_context, _ = _momentum_score_side(base, bars_1h, bars_4h, "SHORT")
+    direction = "NONE"
+    score = max(long_score, short_score)
+    breakdown: list[dict] = []
+    context = {}
+    if long_score >= 35 and long_score >= short_score + 8:
+        direction = "LONG"
+        score = long_score
+        breakdown = long_breakdown
+        context = long_context
+    elif short_score >= 35 and short_score >= long_score + 8:
+        direction = "SHORT"
+        score = short_score
+        breakdown = short_breakdown
+        context = short_context
+
+    if direction == "NONE":
+        verdict = "NO MOMENTUM"
+        sizing = 0.0
+    elif score >= 90:
+        verdict = f"JEBOL SUPER {direction}"
+        sizing = 2.0
+    elif score >= 80:
+        verdict = f"JEBOL KUAT {direction}"
+        sizing = 1.5
+    elif score >= 65:
+        verdict = f"MOMENTUM {direction}"
+        sizing = 1.0
+    else:
+        verdict = f"WATCH JEBOL {direction}"
+        sizing = 0.25
+
+    out = dict(base)
+    out["signal_mode"] = "momentum"
+    out["signal_direction"] = direction
+    out["confluence_score"] = score
+    out["confluence_breakdown"] = breakdown
+    out["momentum_context"] = context
+    out["score_long"] = long_score
+    out["score_short"] = short_score
+    out["verdict"] = verdict
+    out["verdict_detail"] = "Momentum breakout scanner; wait for close/retest confirmation"
+    out["sizing_pct_equity"] = sizing
+    out["bias"] = "bullish" if direction == "LONG" else "bearish" if direction == "SHORT" else "neutral"
+    if direction in ("LONG", "SHORT") and bars_1h:
+        current_price = bars_1h[-1]["c"]
+        b20 = context.get("breakout_1h_20") if isinstance(context, dict) else {}
+        retest_price = (b20 or {}).get("prev_high") if direction == "LONG" else (b20 or {}).get("prev_low")
+        action = "close above range high / retest holds" if direction == "LONG" else "close below range low / retest rejects"
+        out["entry_plan"] = {
+            "direction": direction,
+            "current_price": round(current_price, 8),
+            "entry_price": round(current_price, 8),
+            "entry_zone_label": "Momentum close / retest",
+            "reasoning": [
+                f"Mode Jebol: tunggu {action}, bukan entry buta saat candle lagi liar",
+                f"1H breakout reference: {retest_price}" if retest_price else "1H breakout reference unavailable",
+                "Invalid kalau close balik ke dalam range atau DMI/ADX melemah",
+            ],
+            "stop_plus_hint": "Use failed breakout/retest level as invalidation",
+            "tiers": [],
+            "tp_ladder": [],
+        }
+    return out
+
+
 def get_funding_cached(symbol: str) -> dict:
     """Funding rate + next settle time per symbol."""
     now = time.time()
@@ -4800,6 +5602,8 @@ def index():
 
 
 _signals_threshold = 50  # new strict scoring — 50+ = real dip-buy candidate
+_signals_result_limit = 100
+_momentum_signals_threshold = 60
 
 
 @app.get("/api/signals")
@@ -4811,6 +5615,8 @@ def get_signals(min_score: int = Query(default=_signals_threshold, ge=0, le=100)
     """
     started = time.time()
     symbols = scan_quality_symbols()
+    tickers = get_all_tickers()
+    gainer_ranks, gainer_changes, gainer_universe_count = _ranked_24h_gainers(tickers, symbols)
     from concurrent.futures import ThreadPoolExecutor
 
     def _compute(sym: str) -> tuple[str, dict]:
@@ -4847,16 +5653,22 @@ def get_signals(min_score: int = Query(default=_signals_threshold, ge=0, le=100)
                     "symbol": sym,
                     "coin": sym.split("_")[0],
                     "icon_url": _icon,
+                    "signal_mode": a.get("signal_mode", "reversal"),
                     "direction": direction,
                     "confluence_score": a["confluence_score"],
                     "score_long": a.get("score_long", 0),
                     "score_short": a.get("score_short", 0),
                     "breakdown": a["confluence_breakdown"],
                     "verdict": a.get("verdict"),
+                    "verdict_detail": a.get("verdict_detail"),
                     "rsi_15m": a.get("rsi_15m"),
                     "rsi_1h": a.get("rsi_1h"),
                     "rsi_4h": a.get("rsi_4h"),
                     "rsi_1d": a.get("rsi_1d"),
+                    "dmi_15m": a.get("dmi_15m"),
+                    "dmi_1h": a.get("dmi_1h"),
+                    "dmi_4h": a.get("dmi_4h"),
+                    "dmi_1d": a.get("dmi_1d"),
                     "mtf_oversold_count": a.get("mtf_oversold_count", 0),
                     "mtf_overbought_count": a.get("mtf_overbought_count", 0),
                     "bb_lower_touch": a.get("bb_lower_touch", False),
@@ -4866,6 +5678,9 @@ def get_signals(min_score: int = Query(default=_signals_threshold, ge=0, le=100)
                     "oi_delta_5m_pct": a.get("oi_delta_5m_pct"),
                     "funding_rate_pct": a.get("funding_rate_pct"),
                     "volume_24h_usdt": a.get("volume_24h_usdt"),
+                    "change_24h_pct": a.get("change_24h_pct", gainer_changes.get(sym)),
+                    "gainer_rank_24h": gainer_ranks.get(sym),
+                    "gainer_universe_count": gainer_universe_count,
                     "trend_4h": a.get("trend_4h"),
                     "rsi_bullish_divergence_4h": a.get("rsi_bullish_divergence_4h", False),
                     "rsi_bearish_divergence_4h": a.get("rsi_bearish_divergence_4h", False),
@@ -4873,6 +5688,7 @@ def get_signals(min_score: int = Query(default=_signals_threshold, ge=0, le=100)
                     "candle_pattern_summary": a.get("candle_pattern_summary", []),
                     "entry_plan": a.get("entry_plan"),
                     "sizing_pct_equity": a.get("sizing_pct_equity", 0),
+                    "support_resistance": a.get("support_resistance"),
                     # Phase 1+2 enrichments
                     "primary_pattern_trigger": a.get("primary_pattern_trigger"),
                     "mtf_convergence": a.get("mtf_convergence"),
@@ -4919,14 +5735,605 @@ def get_signals(min_score: int = Query(default=_signals_threshold, ge=0, le=100)
             )
     # Sort by confluence desc
     out.sort(key=lambda x: -x["confluence_score"])
+    for idx, item in enumerate(out, start=1):
+        item["signal_rank"] = idx
+        rank_note = f"Rank sinyal #{idx}"
+        gainer_rank = item.get("gainer_rank_24h")
+        if gainer_rank is not None:
+            change_24h = item.get("change_24h_pct")
+            if change_24h is not None:
+                rank_note += f" | Gainer 24h #{gainer_rank} ({change_24h:+.2f}%)"
+            else:
+                rank_note += f" | Gainer 24h #{gainer_rank}"
+        item["rank_note"] = rank_note
     return JSONResponse(
         {
             "ts": int(time.time() * 1000),
             "latency_ms": int((time.time() - started) * 1000),
             "min_score_threshold": min_score,
+            "result_limit": _signals_result_limit,
             "scanned_count": len(symbols),
             "signal_count": len(out),
-            "signals": out[:20],  # top 20
+            "signals": out[:_signals_result_limit],
+        }
+    )
+
+
+# ─── 7-day gainers (koin yang naik dalam 7 hari) ───
+# Movers scan cache keyed by (interval, periods); shared by gainers + losers.
+_movers_cache: dict[tuple[str, int], tuple[float, list[dict]]] = {}
+_MOVERS_TTL_SECONDS = 300  # 5 min — multi-day change moves slowly
+# Max columns/periods per interval (daily ≤ 1 month, monthly ≤ 1 year).
+_MOVERS_MAX_PERIODS = {"Day1": 31, "Week1": 26, "Month1": 12}
+
+
+def _ticker_quote_volume_24h(ticker: dict) -> float | None:
+    """24h turnover in USDT. MEXC contract ticker exposes amount24 (quote vol)."""
+    for key in ("amount24", "turnover24h", "amount"):
+        raw = ticker.get(key)
+        if raw is not None:
+            try:
+                return float(raw)
+            except (TypeError, ValueError):
+                continue
+    try:
+        vol = float(ticker.get("volume24") or 0)
+        last = float(ticker.get("lastPrice") or ticker.get("fairPrice") or 0)
+        if vol and last:
+            return vol * last
+    except (TypeError, ValueError):
+        pass
+    return None
+
+
+def _normalize_movers_params(interval: str, periods: int) -> tuple[str, int]:
+    """Clamp interval to a supported granularity and periods to its column cap."""
+    if interval not in _MOVERS_MAX_PERIODS:
+        interval = "Day1"
+    cap = _MOVERS_MAX_PERIODS[interval]
+    periods = max(2, min(int(periods), cap))
+    return interval, periods
+
+
+def _movers_rows(interval: str, periods: int) -> list[dict]:
+    """Scan the quality universe and rank by price change over `periods` candles of `interval`.
+
+    Returns rows sorted by change descending (gainers first). Cached 5 min per (interval, periods);
+    gainers and losers share the same scan. Per-column = candle-over-prior-candle % change.
+    """
+    interval, periods = _normalize_movers_params(interval, periods)
+    key = (interval, periods)
+    now = time.time()
+    cached = _movers_cache.get(key)
+    if cached and (now - cached[0]) < _MOVERS_TTL_SECONDS:
+        return cached[1]
+
+    symbols = scan_quality_symbols()
+    tickers = get_all_tickers()
+    fetch_count = periods + 2  # need periods+1 closes for `periods` changes, +1 buffer
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _compute(sym: str) -> dict | None:
+        candles = fetch_klines_cached(sym, interval, fetch_count)
+        if len(candles) < periods + 1:
+            return None
+        window = candles[-(periods + 1):]  # periods+1 closes -> periods columns
+        ref = window[0]["c"]   # close at the start of the window
+        cur = window[-1]["c"]  # latest close
+        if ref <= 0:
+            return None
+        # Per-period % change (candle-over-prior-candle), oldest -> newest.
+        cols = []
+        for i in range(1, len(window)):
+            prev = window[i - 1]["c"]
+            cols.append(
+                {
+                    # MEXC kline time is in seconds; expose milliseconds for JS Date().
+                    "ts": int(window[i]["t"]) * 1000,
+                    "change_pct": round((window[i]["c"] - prev) / prev * 100.0, 2)
+                    if prev > 0
+                    else None,
+                }
+            )
+        # "Normal" price + where the current price sits in the window's range.
+        closes = [c["c"] for c in window]
+        range_high = max(c["h"] for c in window)
+        range_low = min(c["l"] for c in window)
+        normal_price = sum(closes) / len(closes)
+        span = range_high - range_low
+        pos = ((cur - range_low) / span * 100.0) if span > 0 else 50.0
+        pos = max(0.0, min(100.0, pos))
+        # Mean-reversion bias: near the top -> overextended (short), near the bottom -> cheap (long).
+        bias = "short" if pos >= 80 else "long" if pos <= 20 else "neutral"
+        return {
+            "symbol": sym,
+            "change_pct": round((cur - ref) / ref * 100.0, 2),
+            "price": cur,
+            "normal_price": round(normal_price, 8),
+            "range_low": round(range_low, 8),
+            "range_high": round(range_high, 8),
+            "range_pos_pct": round(pos, 1),
+            "bias": bias,
+            "periods": cols,
+            "sparkline": [[int(c["t"]) * 1000, c["c"]] for c in window],
+        }
+
+    rows: list[dict] = []
+    with ThreadPoolExecutor(max_workers=6) as ex:  # match /api/signals to avoid rate-limit
+        for r in ex.map(_compute, symbols):
+            if r:
+                rows.append(r)
+
+    for row in rows:
+        sym = row["symbol"]
+        t = tickers.get(sym) or {}
+        row["coin"] = sym.split("_")[0]
+        row["change_24h_pct"] = _ticker_change_24h_pct(t)
+        row["volume_24h_usdt"] = _ticker_quote_volume_24h(t)
+        try:
+            row["icon_url"] = get_contract_cached(sym).get("baseCoinIconUrl") or None
+        except Exception:
+            row["icon_url"] = None
+
+    rows.sort(key=lambda x: x["change_pct"], reverse=True)
+    for idx, row in enumerate(rows, start=1):
+        row["rank"] = idx
+
+    _movers_cache[key] = (now, rows)
+    return rows
+
+
+def _movers_envelope(rows: list[dict], interval: str, periods: int, started: float) -> dict:
+    return {
+        "ts": int(time.time() * 1000),
+        "latency_ms": int((time.time() - started) * 1000),
+        "interval": interval,
+        "periods": periods,
+        "scanned_count": len(rows),
+        "gainer_count": sum(1 for r in rows if r["change_pct"] > 0),
+        "loser_count": sum(1 for r in rows if r["change_pct"] < 0),
+    }
+
+
+@app.get("/api/gainers-7d")
+def get_gainers_7d(
+    interval: str = Query(default="Day1"),
+    periods: int = Query(default=7, ge=2, le=31),
+    limit: int = Query(default=100, ge=1, le=200),
+    min_change: float = Query(default=0.0),
+):
+    """Koin yang naik selama rentang terpilih (interval x periods), terurut dari kenaikan tertinggi."""
+    started = time.time()
+    interval, periods = _normalize_movers_params(interval, periods)
+    rows = _movers_rows(interval, periods)
+    items = [r for r in rows if r["change_pct"] >= min_change]
+    return JSONResponse(
+        {
+            **_movers_envelope(rows, interval, periods, started),
+            "result_limit": limit,
+            "min_change": min_change,
+            "items": items[:limit],
+        }
+    )
+
+
+@app.get("/api/losers-7d")
+def get_losers_7d(
+    interval: str = Query(default="Day1"),
+    periods: int = Query(default=7, ge=2, le=31),
+    limit: int = Query(default=100, ge=1, le=200),
+    max_change: float = Query(default=0.0),
+):
+    """Koin yang turun selama rentang terpilih (interval x periods), terurut dari penurunan terbesar."""
+    started = time.time()
+    interval, periods = _normalize_movers_params(interval, periods)
+    rows = _movers_rows(interval, periods)  # full set, computed once and shared via cache
+    losers = sorted(
+        (r for r in rows if r["change_pct"] <= max_change),
+        key=lambda x: x["change_pct"],
+    )
+    items = [dict(r, rank=idx) for idx, r in enumerate(losers, start=1)]
+    return JSONResponse(
+        {
+            **_movers_envelope(rows, interval, periods, started),
+            "result_limit": limit,
+            "max_change": max_change,
+            "items": items[:limit],
+        }
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Entry engine — CONFLUENCE (multi-indicator research), not a simple scalp.
+# Reuses compute_analytics: RSI multi-TF + DMI + divergence + SMC + S/R + orderflow
+# -> only enters on HIGH-conviction signals (confluence_score >= threshold) with a
+#    direction confirmed across timeframes. TP/SL sized from 4h ATR (R:R ~1.6).
+# ═══════════════════════════════════════════════════════════════════
+_scalp_cache: tuple[float, list[dict]] | None = None
+_SCALP_TTL_SECONDS = 120         # confluence is heavy -> cache longer (4h signals move slowly)
+_SIGNAL_UNIVERSE = 18            # cap symbols scanned (compute_analytics is expensive)
+# Note: the min confluence score is configurable per-bot (PAPER_BOT.signal_min_score).
+
+
+def _scalp_eval(sym: str, price: float = 0.0) -> dict | None:
+    """Per-symbol CONFLUENCE evaluation — the bot's research-backed brain.
+
+    Pulls the full multi-indicator analysis (RSI MTF, DMI, divergence, SMC, S/R,
+    orderflow) and only flags an entry when the confluence score is high and the
+    direction is confirmed. TP/SL sized from 4h ATR (R:R ~1.6).
+    """
+    if price <= 0:
+        return None
+    try:
+        a = compute_analytics(sym, lite=True)
+    except Exception:
+        return None
+    conf = float(a.get("confluence_score") or 0)
+    direction = a.get("signal_direction") or "NONE"
+    score_long = float(a.get("score_long") or 0)
+    score_short = float(a.get("score_short") or 0)
+    verdict = a.get("verdict") or "AVOID"
+    atr_pct = a.get("atr_pct_4h")
+    if not atr_pct or atr_pct <= 0:
+        atr_pct = 2.0  # fallback sizing
+
+    # Actionable ONLY on high conviction + a clear direction (threshold is configurable).
+    bias = None
+    if conf >= PAPER_BOT.signal_min_score and direction in ("LONG", "SHORT"):
+        bias = "long" if direction == "LONG" else "short"
+
+    tp = sl = 0.0
+    if bias == "long":
+        tp = price * (1 + 1.6 * atr_pct / 100)
+        sl = price * (1 - 1.0 * atr_pct / 100)
+    elif bias == "short":
+        tp = price * (1 - 1.6 * atr_pct / 100)
+        sl = price * (1 + 1.0 * atr_pct / 100)
+
+    # Reason from the confluence breakdown (top research factors) or the verdict.
+    bits: list[str] = []
+    for item in (a.get("confluence_breakdown") or [])[:3]:
+        if isinstance(item, dict):
+            lbl = item.get("label") or item.get("name") or item.get("factor") or ""
+            if lbl:
+                bits.append(str(lbl))
+        elif isinstance(item, str):
+            bits.append(item)
+    reason = " · ".join(bits) if bits else f"{verdict} (score {conf:.0f})"
+
+    return {
+        "symbol": sym,
+        "coin": sym.split("_")[0],
+        "price": price,
+        "confluence_score": round(conf, 1),
+        "direction": direction,
+        "score_long": round(score_long, 1),
+        "score_short": round(score_short, 1),
+        "verdict": verdict,
+        "atr_pct": round(atr_pct, 2),
+        "bias": bias,
+        "order_type": "market",
+        "reason": reason,
+        "score": round(conf, 1),
+        "tp": tp,
+        "sl": sl,
+    }
+
+
+def _scalp_scan() -> list[dict]:
+    """Evaluate top-liquidity symbols; cached 25s. Returns full evals (the brain)."""
+    global _scalp_cache
+    now = time.time()
+    if _scalp_cache and (now - _scalp_cache[0]) < _SCALP_TTL_SECONDS:
+        return _scalp_cache[1]
+
+    tickers = get_all_tickers()
+    # top-N most liquid symbols (compute_analytics is expensive, so keep it bounded)
+    syms = sorted(
+        scan_quality_symbols(),
+        key=lambda s: float((tickers.get(s) or {}).get("amount24") or 0),
+        reverse=True,
+    )[:_SIGNAL_UNIVERSE]
+    prices: dict[str, float] = {}
+    for s in syms:
+        try:
+            prices[s] = float((tickers.get(s) or {}).get("lastPrice") or 0)
+        except (TypeError, ValueError):
+            prices[s] = 0.0
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _safe(sym: str) -> dict | None:
+        try:
+            return _scalp_eval(sym, prices.get(sym, 0.0))
+        except Exception:
+            return None
+
+    evals: list[dict] = []
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for r in ex.map(_safe, syms):
+            if r:
+                evals.append(r)
+    # high-conviction (actionable) first, then by confluence score
+    evals.sort(key=lambda e: (e["bias"] is None, -e["score"]))
+    for e in evals[:18]:
+        try:
+            e["icon_url"] = get_contract_cached(e["symbol"]).get("baseCoinIconUrl") or None
+        except Exception:
+            e["icon_url"] = None
+    _scalp_cache = (now, evals)
+    return evals
+
+
+def _scalp_candidates() -> list[dict]:
+    """Scalp setups ready to trade (bias set), highest score first."""
+    return [dict(e) for e in _scalp_scan() if e.get("bias")]
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Paper trading bot — DUMMY balance, simulated entries/TP/SL on live prices.
+# No real orders. Entries come from the scalp signal engine above.
+# ═══════════════════════════════════════════════════════════════════
+PAPER_BOT = PaperBot(ROOT / "data" / "paper_bot.json")
+_PAPER_BOT_INTERVAL = 4  # seconds between ticks (fast scalper)
+
+
+def _paper_bot_market() -> dict:
+    """Per-symbol live market data: {symbol: {price, change24}} from the ticker snapshot."""
+    market: dict[str, dict] = {}
+    for sym, t in get_all_tickers().items():
+        try:
+            px = float(t.get("lastPrice") or t.get("fairPrice") or 0)
+        except (TypeError, ValueError):
+            continue
+        if px > 0:
+            market[sym] = {"price": px, "change24": _ticker_change_24h_pct(t)}
+    return market
+
+
+def _paper_bot_loop() -> None:
+    import time as _time
+
+    while True:
+        try:
+            if PAPER_BOT.running:
+                market = _paper_bot_market()
+                prices = {s: m["price"] for s, m in market.items()}
+                # Fresh fair price for held symbols so TP/SL exits fire snappily.
+                for sym in PAPER_BOT.held_symbols():
+                    try:
+                        fp = float((ACCOUNTS[0].client.fair_price(sym).get("data") or {}).get("fairPrice") or 0)
+                        if fp > 0:
+                            prices[sym] = fp
+                    except Exception:
+                        pass
+                candidates = _scalp_candidates()  # 1m/5m/15m pullback setups
+                PAPER_BOT.tick(prices, candidates, int(_time.time() * 1000))
+        except Exception:
+            pass
+        _time.sleep(_PAPER_BOT_INTERVAL)
+
+
+@app.get("/api/paperbot/state")
+def get_paperbot_state():
+    """Live paper-bot snapshot: balance, equity, open positions, closed trades, analytics."""
+    market = _paper_bot_market()
+    # For held symbols: real coin logo + fresh fair price (so equity/PnL tick live).
+    for sym in PAPER_BOT.held_symbols():
+        entry = market.setdefault(sym, {})
+        try:
+            entry["icon_url"] = get_contract_cached(sym).get("baseCoinIconUrl") or None
+        except Exception:
+            entry.setdefault("icon_url", None)
+        try:
+            fp = float((ACCOUNTS[0].client.fair_price(sym).get("data") or {}).get("fairPrice") or 0)
+            if fp > 0:
+                entry["price"] = fp
+        except Exception:
+            pass
+    state = PAPER_BOT.snapshot(market)
+    state["updated_ms"] = int(time.time() * 1000)
+    return JSONResponse(state)
+
+
+@app.get("/api/paperbot/scanner")
+def get_paperbot_scanner(limit: int = Query(default=24, ge=1, le=40)):
+    """The bot's 'brain': live per-coin scalp evaluation (why it enters or waits)."""
+    evals = _scalp_scan()
+    return JSONResponse(
+        {
+            "ts": int(time.time() * 1000),
+            "scanned": len(evals),
+            "ready": sum(1 for e in evals if e.get("bias")),
+            "min_score": PAPER_BOT.signal_min_score,
+            "items": evals[:limit],
+        }
+    )
+
+
+@app.post("/api/paperbot/start")
+def post_paperbot_start():
+    PAPER_BOT.start()
+    return {"ok": True, "running": True}
+
+
+@app.post("/api/paperbot/stop")
+def post_paperbot_stop():
+    PAPER_BOT.stop()
+    return {"ok": True, "running": False}
+
+
+@app.post("/api/paperbot/reset")
+def post_paperbot_reset(balance: float = Query(default=100.0, ge=1, le=1_000_000)):
+    PAPER_BOT.reset(balance)
+    return {"ok": True, "start_balance": balance}
+
+
+@app.post("/api/paperbot/config")
+def post_paperbot_config(
+    max_positions: int | None = Query(default=None),
+    margin_per_trade: float | None = Query(default=None),
+    leverage: float | None = Query(default=None),
+    roi_take_profit: float | None = Query(default=None),
+    risk_pct: float | None = Query(default=None),
+    signal_min_score: float | None = Query(default=None),
+):
+    PAPER_BOT.update_config(
+        max_positions=max_positions,
+        margin_per_trade=margin_per_trade,
+        leverage=leverage,
+        roi_take_profit=roi_take_profit,
+        risk_pct=risk_pct,
+        signal_min_score=signal_min_score,
+    )
+    return {"ok": True}
+
+
+@app.post("/api/paperbot/close/{pos_id}")
+def post_paperbot_close(pos_id: int):
+    ok = PAPER_BOT.close_position(pos_id, None, int(time.time() * 1000))
+    return {"ok": ok}
+
+
+@app.get("/api/momentum-signals")
+def get_momentum_signals(min_score: int = Query(default=_momentum_signals_threshold, ge=0, le=100)):
+    """Scan quality symbols for continuation / breakout momentum setups."""
+    started = time.time()
+    symbols = scan_quality_symbols()
+    tickers = get_all_tickers()
+    gainer_ranks, gainer_changes, gainer_universe_count = _ranked_24h_gainers(tickers, symbols)
+    from concurrent.futures import ThreadPoolExecutor
+
+    def _compute(sym: str) -> tuple[str, dict]:
+        try:
+            return sym, compute_momentum_signal(sym)
+        except Exception:
+            return sym, {}
+
+    results: dict[str, dict] = {}
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for sym, a in ex.map(_compute, symbols):
+            results[sym] = a
+
+    out = []
+    for sym in symbols:
+        a = results.get(sym) or {}
+        if not a:
+            continue
+        direction = a.get("signal_direction", "NONE")
+        if a.get("confluence_score", 0) >= min_score and direction != "NONE":
+            try:
+                record_signal_event(sym, a)
+            except Exception:
+                pass
+            try:
+                _ctr = get_contract_cached(sym)
+                _icon = _ctr.get("baseCoinIconUrl") or None
+            except Exception:
+                _icon = None
+            out.append(
+                {
+                    "symbol": sym,
+                    "coin": sym.split("_")[0],
+                    "icon_url": _icon,
+                    "signal_mode": "momentum",
+                    "direction": direction,
+                    "confluence_score": a.get("confluence_score", 0),
+                    "score_long": a.get("score_long", 0),
+                    "score_short": a.get("score_short", 0),
+                    "breakdown": a.get("confluence_breakdown", []),
+                    "verdict": a.get("verdict"),
+                    "verdict_detail": a.get("verdict_detail"),
+                    "momentum_context": a.get("momentum_context"),
+                    "rsi_15m": a.get("rsi_15m"),
+                    "rsi_1h": a.get("rsi_1h"),
+                    "rsi_4h": a.get("rsi_4h"),
+                    "rsi_1d": a.get("rsi_1d"),
+                    "dmi_15m": a.get("dmi_15m"),
+                    "dmi_1h": a.get("dmi_1h"),
+                    "dmi_4h": a.get("dmi_4h"),
+                    "dmi_1d": a.get("dmi_1d"),
+                    "mtf_oversold_count": a.get("mtf_oversold_count", 0),
+                    "mtf_overbought_count": a.get("mtf_overbought_count", 0),
+                    "bb_lower_touch": a.get("bb_lower_touch", False),
+                    "dist_from_7d_high_pct": a.get("dist_from_7d_high_pct"),
+                    "dist_from_7d_low_pct": a.get("dist_from_7d_low_pct"),
+                    "volume_capitulation": a.get("volume_capitulation", False),
+                    "oi_delta_5m_pct": a.get("oi_delta_5m_pct"),
+                    "funding_rate_pct": a.get("funding_rate_pct"),
+                    "volume_24h_usdt": a.get("volume_24h_usdt"),
+                    "change_24h_pct": a.get("change_24h_pct", gainer_changes.get(sym)),
+                    "gainer_rank_24h": gainer_ranks.get(sym),
+                    "gainer_universe_count": gainer_universe_count,
+                    "trend_4h": a.get("trend_4h"),
+                    "rsi_bullish_divergence_4h": a.get("rsi_bullish_divergence_4h", False),
+                    "rsi_bearish_divergence_4h": a.get("rsi_bearish_divergence_4h", False),
+                    "three_bar_reversal_1h": a.get("three_bar_reversal_1h", False),
+                    "candle_pattern_summary": a.get("candle_pattern_summary", []),
+                    "entry_plan": a.get("entry_plan"),
+                    "sizing_pct_equity": a.get("sizing_pct_equity", 0),
+                    "support_resistance": a.get("support_resistance"),
+                    "primary_pattern_trigger": a.get("primary_pattern_trigger"),
+                    "mtf_convergence": a.get("mtf_convergence"),
+                    "wyckoff_spring_upthrust": a.get("wyckoff_spring_upthrust"),
+                    "wyckoff_phase": a.get("wyckoff_phase"),
+                    "liquidity_sweep_4h": a.get("liquidity_sweep_4h"),
+                    "liquidation_cluster": a.get("liquidation_cluster"),
+                    "sd_zones_4h": a.get("sd_zones_4h"),
+                    "volume_profile_4h": a.get("volume_profile_4h"),
+                    "long_short_ratio": a.get("long_short_ratio"),
+                    "funding_rate_7d_avg": a.get("funding_rate_7d_avg"),
+                    "cumulative_delta": a.get("cumulative_delta"),
+                    "orderbook_heatmap": a.get("orderbook_heatmap"),
+                    "sl_invalidation": a.get("sl_invalidation"),
+                    "rr_ratio": a.get("rr_ratio"),
+                    "tier_anchor_sources": a.get("tier_anchor_sources"),
+                    "atr_4h": a.get("atr_4h"),
+                    "atr_pct_4h": a.get("atr_pct_4h"),
+                    "anchored_vwap_swing_low": a.get("anchored_vwap_swing_low"),
+                    "anchored_vwap_swing_high": a.get("anchored_vwap_swing_high"),
+                    "market_regime": a.get("market_regime"),
+                    "spot_futures_basis": a.get("spot_futures_basis"),
+                    "liquidation_zones": a.get("liquidation_zones"),
+                    "cvd_historical": a.get("cvd_historical"),
+                    "btc_correlation_alignment": a.get("btc_correlation_alignment"),
+                    "liquidity_grab_4h": a.get("liquidity_grab_4h"),
+                    "liquidity_grab_1h": a.get("liquidity_grab_1h"),
+                    "liquidity_sweep_15m": a.get("liquidity_sweep_15m"),
+                    "volume_confirmation_4h": a.get("volume_confirmation_4h"),
+                    "funding_window": a.get("funding_window"),
+                    "macro_score_adjustments": a.get("macro_score_adjustments"),
+                    "funding_arb_signal": a.get("funding_arb_signal"),
+                    "dynamic_lev_band": a.get("dynamic_lev_band"),
+                    "dynamic_lev_mult": a.get("dynamic_lev_mult"),
+                    "sd_zones_1d": a.get("sd_zones_1d"),
+                    "sd_zones_1h": a.get("sd_zones_1h"),
+                    "volume_profile_1d": a.get("volume_profile_1d"),
+                    "volume_profile_1h": a.get("volume_profile_1h"),
+                }
+            )
+
+    out.sort(key=lambda x: -x["confluence_score"])
+    for idx, item in enumerate(out, start=1):
+        item["signal_rank"] = idx
+        rank_note = f"Rank jebol #{idx}"
+        gainer_rank = item.get("gainer_rank_24h")
+        if gainer_rank is not None:
+            change_24h = item.get("change_24h_pct")
+            if change_24h is not None:
+                rank_note += f" | Gainer 24h #{gainer_rank} ({change_24h:+.2f}%)"
+            else:
+                rank_note += f" | Gainer 24h #{gainer_rank}"
+        item["rank_note"] = rank_note
+
+    return JSONResponse(
+        {
+            "ts": int(time.time() * 1000),
+            "latency_ms": int((time.time() - started) * 1000),
+            "min_score_threshold": min_score,
+            "result_limit": _signals_result_limit,
+            "scanned_count": len(symbols),
+            "signal_count": len(out),
+            "signals": out[:_signals_result_limit],
         }
     )
 
@@ -4984,6 +6391,9 @@ def _startup_cascade():
     CASCADE_ORCHESTRATOR.start()
     # Phase 16: start WebSocket realtime client
     WS_CLIENT.start()
+    # Paper trading bot loop (dummy balance, no real orders)
+    import threading
+    threading.Thread(target=_paper_bot_loop, name="paper-bot", daemon=True).start()
 
 
 @app.on_event("shutdown")

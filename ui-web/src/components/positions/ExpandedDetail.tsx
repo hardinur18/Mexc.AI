@@ -23,6 +23,7 @@ import { MarketRegimeCard } from "@/components/analytics/MarketRegimeCard";
 import { LiquidationZonesPhase5Card } from "@/components/analytics/LiquidationZonesPhase5Card";
 import { CVDHistoryCard } from "@/components/analytics/CVDHistoryCard";
 import { SignalQualityCard } from "@/components/analytics/SignalQualityCard";
+import { SupportResistanceCard } from "@/components/analytics/SupportResistanceCard";
 
 interface ExpandedDetailProps {
   p: Position;
@@ -180,6 +181,8 @@ export function ExpandedDetail({ p }: ExpandedDetailProps) {
               dynamicLevMult={analytics?.dynamic_lev_mult}
               direction={direction}
             />
+
+            <SupportResistanceCard data={analytics?.support_resistance} direction={direction} />
 
             {/* SL + R:R */}
             <SLInvalidationCard

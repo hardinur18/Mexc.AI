@@ -33,20 +33,23 @@ import { CVDHistoryCard } from "@/components/analytics/CVDHistoryCard";
 import { SignalQualityCard } from "@/components/analytics/SignalQualityCard";
 import { SignalTickerTape } from "@/components/analytics/SignalTickerTape";
 import { SignalHeatmapGrid } from "@/components/analytics/SignalHeatmapGrid";
+import { SupportResistanceCard } from "@/components/analytics/SupportResistanceCard";
 import { EntryPlanCard } from "@/components/positions/EntryPlanCard";
 import { CoinIcon } from "@/components/ui/CoinIcon";
 
 type DirFilter = "ALL" | "LONG" | "SHORT";
-type SortKey = "score" | "volume" | "discount" | "symbol" | "mtf";
+type SignalMode = "reversal" | "momentum";
+type SortKey = "score" | "volume" | "discount" | "symbol" | "mtf" | "gainer";
 
 export function SignalsPanelInner() {
   const [minScore, setMinScore] = useState(45);
+  const [signalMode, setSignalMode] = useState<SignalMode>("reversal");
   const [dirFilter, setDirFilter] = useState<DirFilter>("ALL");
   const [sortKey, setSortKey] = useState<SortKey>("score");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "heatmap">("list");
-  const { data, isLoading } = useSignals(minScore);
+  const { data, isLoading } = useSignals(minScore, signalMode);
   const { data: snap } = useSnapshot();
   const { data: breaker } = useCircuitBreaker();
   const cascadeDisabled = !!(breaker?.tripped || breaker?.cooldown_active);
@@ -72,6 +75,11 @@ export function SignalsPanelInner() {
       switch (sortKey) {
         case "volume":
           return (b.volume_24h_usdt ?? 0) - (a.volume_24h_usdt ?? 0);
+        case "gainer": {
+          const ar = a.gainer_rank_24h ?? Number.MAX_SAFE_INTEGER;
+          const br = b.gainer_rank_24h ?? Number.MAX_SAFE_INTEGER;
+          return ar - br || (b.change_24h_pct ?? -Infinity) - (a.change_24h_pct ?? -Infinity);
+        }
         case "discount":
           if (a.direction === "SHORT" && b.direction === "SHORT") {
             return (b.dist_from_7d_low_pct ?? 0) - (a.dist_from_7d_low_pct ?? 0);
@@ -91,13 +99,34 @@ export function SignalsPanelInner() {
 
   const longCount = data?.signals.filter((s) => s.direction === "LONG").length ?? 0;
   const shortCount = data?.signals.filter((s) => s.direction === "SHORT").length ?? 0;
+  const scoreOptions =
+    signalMode === "momentum"
+      ? [
+          { value: "60", label: ">=60 (watch)" },
+          { value: "70", label: ">=70 (kuat)" },
+          { value: "80", label: ">=80 (jebol)" },
+          { value: "90", label: ">=90 (super)" },
+        ]
+      : [
+          { value: "30", label: ">=30 (longgar)" },
+          { value: "45", label: ">=45 (default)" },
+          { value: "60", label: ">=60 (ketat)" },
+          { value: "80", label: ">=80 (premium)" },
+        ];
+
+  const handleSignalModeChange = (mode: SignalMode) => {
+    setSignalMode(mode);
+    setMinScore(mode === "momentum" ? 60 : 45);
+    setExpanded(null);
+  };
 
   return (
     <div className="px-3 pb-3 md:px-4 md:pb-4">
       <div className="flex items-center justify-between gap-3 py-2.5 text-xs font-semibold uppercase tracking-[0.04em] text-[var(--color-fg-faint)]">
         <div className="flex min-w-0 items-center gap-2.5">
           <span>
-            {filteredSignals.length} dari {data?.signal_count ?? 0} sinyal
+            {filteredSignals.length} dari {data?.signal_count ?? 0}{" "}
+            {signalMode === "momentum" ? "sinyal jebol" : "sinyal reversal"}
           </span>
           {data && (
             <>
@@ -120,6 +149,14 @@ export function SignalsPanelInner() {
       <SignalTickerTape signals={data?.signals} />
 
       <div className="mb-3 flex flex-wrap items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-elev)] p-1.5 shadow-sm">
+        <SegmentedControl
+          value={signalMode}
+          onChange={handleSignalModeChange}
+          options={[
+            { value: "reversal", label: "Reversal", icon: <Sparkles size={9} /> },
+            { value: "momentum", label: "Jebol", icon: <TrendingUp size={9} /> },
+          ]}
+        />
         <SegmentedControl
           value={dirFilter}
           onChange={(v) => setDirFilter(v as DirFilter)}
@@ -158,12 +195,7 @@ export function SignalsPanelInner() {
           icon={<Filter size={10} />}
           label="Skor"
           value={`≥${minScore}`}
-          options={[
-            { value: "30", label: "≥30 (longgar)" },
-            { value: "45", label: "≥45 (default)" },
-            { value: "60", label: "≥60 (ketat)" },
-            { value: "80", label: "≥80 (premium)" },
-          ]}
+          options={scoreOptions}
           onChange={(v) => setMinScore(Number(v))}
         />
         <ToolbarDropdown
@@ -172,6 +204,7 @@ export function SignalsPanelInner() {
           options={[
             { value: "score", label: "Confluence Score" },
             { value: "mtf", label: "MTF Convergence" },
+            { value: "gainer", label: "Gainer 24h" },
             { value: "volume", label: "Volume 24h" },
             { value: "discount", label: "Diskon terjauh" },
             { value: "symbol", label: "Symbol A-Z" },
@@ -223,7 +256,7 @@ export function SignalsPanelInner() {
           {viewMode === "list" && filteredSignals.length > 0 && (
             <div className="mb-1 hidden grid-cols-[minmax(240px,1.05fr)_minmax(420px,1.6fr)_82px_150px] items-center gap-3 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-fg-faint)] lg:grid">
               <span>Sinyal</span>
-              <span>Timeframe RSI</span>
+              <span>RSI / DMI</span>
               <span className="text-right">Skor</span>
               <span className="text-right">Entry</span>
             </div>
@@ -264,10 +297,16 @@ export function SignalsPanel() {
 const SORT_LABELS: Record<SortKey, string> = {
   score: "Skor",
   mtf: "MTF",
+  gainer: "Gainer",
   volume: "Volume",
   discount: "Diskon",
   symbol: "A-Z",
 };
+
+function fmtSignedPct(v: number) {
+  const decimals = Math.abs(v) >= 10 ? 1 : 2;
+  return `${v > 0 ? "+" : ""}${v.toFixed(decimals)}%`;
+}
 
 function SegmentedControl<T extends string>({
   value,
@@ -427,7 +466,28 @@ function SignalRow({
                 </span>
               )}
             </div>
-            <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-[var(--color-fg-faint)]">
+            <div
+              className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-[var(--color-fg-faint)]"
+              title={signal.rank_note}
+            >
+              {signal.signal_rank != null && (
+                <span className="rounded bg-[var(--color-accent-soft)] px-1.5 py-0.5 text-[var(--color-accent)]">
+                  Rank sinyal #{signal.signal_rank}
+                </span>
+              )}
+              {signal.gainer_rank_24h != null && (
+                <span
+                  className={cn(
+                    "rounded px-1.5 py-0.5",
+                    (signal.change_24h_pct ?? 0) >= 0
+                      ? "bg-[var(--color-success-soft)] text-[var(--color-success)]"
+                      : "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
+                  )}
+                >
+                  Gainer #{signal.gainer_rank_24h}
+                  {signal.change_24h_pct != null ? ` ${fmtSignedPct(signal.change_24h_pct)}` : ""}
+                </span>
+              )}
               {isLong && (signal.mtf_oversold_count ?? 0) > 0 && (
                 <span className="text-[var(--color-success)]">
                   {signal.mtf_oversold_count}/4 oversold
@@ -448,17 +508,17 @@ function SignalRow({
           </div>
         </div>
 
-        {/* Row 2: RSI cells + MTF + entry — always fits */}
+        {/* Row 2: RSI + DMI cells + MTF + entry */}
         <div className="grid grid-cols-2 items-center gap-1.5 pl-7 sm:grid-cols-[repeat(4,minmax(64px,1fr))_54px] lg:pl-0">
           <div className="contents num">
-            <MtfRsi label="15M" v={signal.rsi_15m} />
-            <MtfRsi label="1H" v={signal.rsi_1h} />
-            <MtfRsi label="4H" v={signal.rsi_4h} />
-            <MtfRsi label="1D" v={signal.rsi_1d} />
+            <MtfRsiDmi label="15M" v={signal.rsi_15m} dmi={signal.dmi_15m} />
+            <MtfRsiDmi label="1H" v={signal.rsi_1h} dmi={signal.dmi_1h} />
+            <MtfRsiDmi label="4H" v={signal.rsi_4h} dmi={signal.dmi_4h} />
+            <MtfRsiDmi label="1D" v={signal.rsi_1d} dmi={signal.dmi_1d} />
           </div>
           {mtfScore != null && (
             <div
-              className="min-h-10 rounded-[var(--radius-sm)] border px-1.5 py-1 text-center leading-tight"
+              className="min-h-[58px] rounded-[var(--radius-sm)] border px-1.5 py-1 text-center leading-tight"
               style={{
                 color: mtfScore >= 60 ? tone : "var(--color-fg-muted)",
                 background: `color-mix(in oklch, ${mtfScore >= 60 ? tone : "var(--color-fg-muted)"} 8%, transparent)`,
@@ -555,6 +615,8 @@ function SignalRow({
                 dynamicLevMult={signal.dynamic_lev_mult}
                 direction={direction}
               />
+
+              <SupportResistanceCard data={signal.support_resistance} direction={direction} />
 
               {/* Row 3: SL Invalidation + R:R */}
               <SLInvalidationCard
@@ -723,7 +785,61 @@ function CascadeStartButton({
   );
 }
 
-function MtfRsi({ label, v }: { label: string; v?: number | null }) {
+function MtfRsiDmi({
+  label,
+  v,
+  dmi,
+}: {
+  label: string;
+  v?: number | null;
+  dmi?: Signal["dmi_15m"];
+}) {
+  const tone =
+    v == null
+      ? "var(--color-fg-faint)"
+      : v < 30
+        ? "var(--color-success)"
+        : v > 70
+          ? "var(--color-danger)"
+          : "var(--color-fg-muted)";
+  const pdiDominant = dmi != null && dmi.pdi >= dmi.mdi;
+  const adxTone =
+    dmi == null
+      ? "var(--color-fg-faint)"
+      : dmi.adx >= 25
+        ? "var(--color-warning)"
+        : "var(--color-fg-faint)";
+  const title =
+    dmi == null
+      ? `${label}: RSI ${v != null ? v.toFixed(0) : "-"}`
+      : `${label}: RSI ${v != null ? v.toFixed(0) : "-"} | +DI ${dmi.pdi.toFixed(0)} | -DI ${dmi.mdi.toFixed(0)} | ADX ${dmi.adx.toFixed(0)}`;
+
+  return (
+    <div
+      className="min-h-[58px] rounded-[var(--radius-sm)] border border-[var(--color-border)] px-2 py-1 text-center"
+      style={{ background: `color-mix(in oklch, ${tone} 8%, var(--color-bg-elev-2))` }}
+      title={title}
+    >
+      <div className="text-xs font-bold uppercase tracking-[0.04em] text-[var(--color-fg-faint)]">
+        {label}
+      </div>
+      <div className="num text-xs font-bold leading-tight" style={{ color: tone }}>
+        RSI {v != null ? v.toFixed(0) : "-"}
+      </div>
+      <div className="mt-0.5 flex items-center justify-center gap-1 text-[10px] font-bold leading-none">
+        <span style={{ color: pdiDominant ? "var(--color-success)" : "var(--color-fg-faint)" }}>
+          +{dmi != null ? dmi.pdi.toFixed(0) : "-"}
+        </span>
+        <span style={{ color: !pdiDominant && dmi != null ? "var(--color-danger)" : "var(--color-fg-faint)" }}>
+          -{dmi != null ? dmi.mdi.toFixed(0) : "-"}
+        </span>
+        <span style={{ color: adxTone }}>A{dmi != null ? dmi.adx.toFixed(0) : "-"}</span>
+      </div>
+    </div>
+  );
+}
+
+export function MtfRsi({ label, v }: { label: string; v?: number | null }) {
   const tone =
     v == null
       ? "var(--color-fg-faint)"

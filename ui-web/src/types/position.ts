@@ -103,6 +103,9 @@ export interface SymbolAnalytics {
   volume_profile_4h?: VolumeProfileData | null;
   liquidation_cluster?: LiquidationCluster | null;
   mtf_convergence?: MTFConvergence | null;
+  support_resistance?: SupportResistanceConfluence | null;
+  signal_mode?: "reversal" | "momentum";
+  momentum_context?: MomentumContext | null;
   oi_history_api?: OiHistoryPoint[];
   long_short_ratio?: LongShortRatioSample | null;
   long_short_ratio_history?: LongShortRatioSample[];
@@ -239,6 +242,64 @@ export interface VolumeProfileData {
   histogram: VolumeProfileBin[];
   hvn: { price: number; volume_ratio: number }[];
   lvn: { price: number; volume_ratio: number }[];
+}
+
+export interface SupportResistanceLevel {
+  label: string;
+  kind: string;
+  side: "support" | "resistance" | "pivot";
+  price: number;
+  distance_pct: number;
+  strength: number;
+  timeframe?: string | null;
+  in_zone?: boolean;
+  zone_low?: number | null;
+  zone_high?: number | null;
+}
+
+export interface SupportResistanceConfluence {
+  score: number;
+  verdict: "strong" | "valid" | "thin" | "weak" | string;
+  near_window_pct?: number;
+  score_delta?: number;
+  score_cap?: number | null;
+  target_score?: number;
+  obstacle_score?: number;
+  nearest_support?: SupportResistanceLevel | null;
+  nearest_resistance?: SupportResistanceLevel | null;
+  levels: SupportResistanceLevel[];
+  warnings?: string[];
+}
+
+export interface MomentumBreakoutMetrics {
+  lookback?: number;
+  close?: number;
+  prev_high?: number;
+  prev_low?: number;
+  breakout_up?: boolean;
+  breakdown_down?: boolean;
+  near_high?: boolean;
+  near_low?: boolean;
+  retest_up?: boolean;
+  retest_down?: boolean;
+  breakout_pct?: number | null;
+  breakdown_pct?: number | null;
+  distance_to_high_pct?: number | null;
+  distance_to_low_pct?: number | null;
+  volume_ratio?: number | null;
+  body_ratio?: number | null;
+}
+
+export interface MomentumContext {
+  breakout_1h_20?: MomentumBreakoutMetrics;
+  breakout_1h_55?: MomentumBreakoutMetrics;
+  breakout_4h_20?: MomentumBreakoutMetrics;
+  rsi_15m?: number | null;
+  rsi_1h?: number | null;
+  rsi_4h?: number | null;
+  rsi_1d?: number | null;
+  volume_ratio_1h?: number | null;
+  score_cap?: number | null;
 }
 
 export interface LiquidationCluster {
@@ -693,12 +754,17 @@ export interface Signal {
   symbol: string;
   coin?: string;
   icon_url?: string | null;
+  signal_mode?: "reversal" | "momentum";
   confluence_score: number;
   breakdown: AnalyticsBreakdownItem[];
   rsi_15m?: number | null;
   rsi_1h?: number | null;
   rsi_4h?: number | null;
   rsi_1d?: number | null;
+  dmi_15m?: DmiValue | null;
+  dmi_1h?: DmiValue | null;
+  dmi_4h?: DmiValue | null;
+  dmi_1d?: DmiValue | null;
   mtf_oversold_count?: number;
   bb_lower_touch?: boolean;
   dist_from_7d_high_pct?: number | null;
@@ -706,7 +772,14 @@ export interface Signal {
   oi_delta_5m_pct?: number | null;
   funding_rate_pct?: number | null;
   volume_24h_usdt?: number | null;
+  change_24h_pct?: number | null;
+  signal_rank?: number;
+  gainer_rank_24h?: number | null;
+  gainer_universe_count?: number;
+  rank_note?: string;
   verdict?: string;
+  verdict_detail?: string | null;
+  momentum_context?: MomentumContext | null;
   trend_4h?: string | null;
   rsi_bullish_divergence_4h?: boolean;
   rsi_bearish_divergence_4h?: boolean;
@@ -720,6 +793,7 @@ export interface Signal {
   candle_pattern_summary?: { tf: string; pattern: string }[];
   entry_plan?: EntryPlan | null;
   sizing_pct_equity?: number;
+  support_resistance?: SupportResistanceConfluence | null;
   // Phase 1+2 enrichments
   primary_pattern_trigger?: PrimaryPatternTrigger | null;
   mtf_convergence?: MTFConvergence | null;
@@ -762,13 +836,197 @@ export interface Signal {
   volume_profile_1h?: VolumeProfileData | null;
 }
 
+export interface DmiValue {
+  pdi: number;
+  mdi: number;
+  adx: number;
+}
+
 export interface SignalsResponse {
   ts: number;
   latency_ms: number;
   min_score_threshold: number;
+  result_limit?: number;
   scanned_count: number;
   signal_count: number;
   signals: Signal[];
+}
+
+export interface Mover7d {
+  rank: number;
+  symbol: string;
+  coin: string;
+  icon_url?: string | null;
+  /** Total % change over the selected range (interval × periods). */
+  change_pct: number;
+  /** 24h change in percent, from the ticker (may be null). */
+  change_24h_pct: number | null;
+  price: number;
+  /** Average close over the window — the "normal/typical" price. */
+  normal_price: number;
+  /** Lowest low / highest high across the window. */
+  range_low: number;
+  range_high: number;
+  /** Where the current price sits in [low, high]: 0 = bottom, 100 = top. */
+  range_pos_pct: number;
+  /** Mean-reversion bias: top → "short", bottom → "long", middle → "neutral". */
+  bias: "long" | "short" | "neutral";
+  volume_24h_usdt: number | null;
+  /** Per-period % change (candle-over-prior-candle), oldest → newest. One per column. */
+  periods: { ts: number; change_pct: number | null }[];
+  /** [[time_ms, close], ...] closes for the sparkline. */
+  sparkline: number[][];
+}
+
+export interface BotPosition {
+  id: number;
+  symbol: string;
+  coin: string;
+  icon_url?: string | null;
+  side: "LONG" | "SHORT";
+  entry: number;
+  qty: number;
+  margin: number;
+  leverage: number;
+  tp: number;
+  sl: number;
+  entry_fee: number;
+  opened_ms: number;
+  mark: number;
+  /** True once SL ratcheted into profit (breakeven/trailing active). */
+  trailed: boolean;
+  upnl: number;
+  upnl_pct: number;
+  notional: number;
+  change_24h_pct: number | null;
+  /** Progress along entry→TP path: 0 = at entry, 100 = TP hit (can be <0). */
+  tp_progress_pct: number;
+  dist_tp_pct: number;
+  dist_sl_pct: number;
+  /** Loss-at-SL as % of equity (the "risk per entry"). */
+  risk_pct: number;
+}
+
+export interface BotClosedTrade {
+  id: number;
+  symbol: string;
+  coin: string;
+  icon_url?: string | null;
+  side: "LONG" | "SHORT";
+  entry: number;
+  exit: number;
+  qty: number;
+  pnl: number;
+  fee: number;
+  reason: "TP" | "ROI" | "TRAIL" | "SL" | "LIQ" | "timeout" | "manual";
+  opened_ms: number;
+  closed_ms: number;
+}
+
+export interface BotPendingOrder {
+  id: number;
+  symbol: string;
+  coin: string;
+  icon_url?: string | null;
+  side: "LONG" | "SHORT";
+  limit_price: number;
+  tp: number;
+  sl: number;
+  mark: number;
+  created_ms: number;
+  /** % distance from current price to the limit level (needs to reach it to fill). */
+  dist_pct: number;
+}
+
+export interface PaperBotState {
+  running: boolean;
+  start_balance: number;
+  cash: number;
+  equity: number;
+  peak_equity: number;
+  total_pnl: number;
+  total_pnl_pct: number;
+  realized_pnl: number;
+  open_count: number;
+  long_count: number;
+  short_count: number;
+  closed_count: number;
+  win_count: number;
+  loss_count: number;
+  win_rate: number;
+  profit_factor: number;
+  gross_profit: number;
+  gross_loss: number;
+  avg_win: number;
+  avg_loss: number;
+  best_trade: number;
+  worst_trade: number;
+  total_fees: number;
+  max_drawdown_pct: number;
+  exposure_pct: number;
+  config: {
+    max_positions: number;
+    margin_fraction: number;
+    margin_per_trade: number;
+    risk_pct: number;
+    leverage: number;
+    roi_take_profit: number;
+    signal_min_score: number;
+    sl_pct: number;
+    fee_rate: number;
+  };
+  pending_count: number;
+  positions: BotPosition[];
+  pending: BotPendingOrder[];
+  closed: BotClosedTrade[];
+  equity_curve: number[][];
+  updated_ms?: number;
+}
+
+export interface ScalpEval {
+  symbol: string;
+  coin: string;
+  icon_url?: string | null;
+  price: number;
+  /** Composite confluence score (0–100) from the multi-indicator engine. */
+  confluence_score: number;
+  direction: "LONG" | "SHORT" | "NONE";
+  score_long: number;
+  score_short: number;
+  verdict: string;
+  atr_pct: number;
+  bias: "long" | "short" | null;
+  order_type: "limit" | "market" | null;
+  reason: string;
+  score: number;
+  tp: number;
+  sl: number;
+}
+
+export interface ScalpScanner {
+  ts: number;
+  scanned: number;
+  ready: number;
+  min_score: number;
+  items: ScalpEval[];
+}
+
+export interface Movers7dResponse {
+  ts: number;
+  latency_ms: number;
+  /** Candle granularity: "Day1" | "Week1" | "Month1". */
+  interval: string;
+  /** Number of period columns returned. */
+  periods: number;
+  scanned_count: number;
+  gainer_count: number;
+  loser_count: number;
+  result_limit: number;
+  /** Gainers endpoint: minimum change filter. */
+  min_change?: number;
+  /** Losers endpoint: maximum change filter (≤ value, negative). */
+  max_change?: number;
+  items: Mover7d[];
 }
 
 export interface ClosedPosition {

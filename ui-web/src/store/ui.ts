@@ -44,7 +44,7 @@ interface UiState {
   /** Theme mode — dark or light. */
   theme: "dark" | "light";
   /** Active page in sidebar navigation. */
-  activePage: "dashboard" | "signals" | "cascade" | "performance" | "risk" | "accounts" | "history";
+  activePage: "dashboard" | "terminal" | "signals" | "gainers" | "losers" | "bot" | "cascade" | "performance" | "risk" | "accounts" | "history";
   /** Sidebar collapsed state. */
   sidebarCollapsed: boolean;
 

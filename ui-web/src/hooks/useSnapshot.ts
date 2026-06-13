@@ -13,10 +13,16 @@ import {
   fetchCryptoPanic,
   fetchDeribitOptions,
   fetchFearGreed,
+  fetchMovers7d,
+  fetchPaperBot,
+  fetchScalpScanner,
   fetchMacro,
+  type MoverKind,
+  type MoverInterval,
   fetchPerformance,
   fetchPortfolioRisk,
   fetchDeFiLlama,
+  fetchMomentumSignals,
   fetchPatternWinrate,
   fetchSignalJournal,
   fetchWsStatus,
@@ -59,14 +65,47 @@ export function useCategories() {
   });
 }
 
-export function useSignals(minScore = 65) {
+export function useSignals(minScore = 65, mode: "reversal" | "momentum" = "reversal") {
   const intervalSec = useUiStore((s) => s.intervalSec);
   const paused = useUiStore((s) => s.paused);
   return useQuery({
-    queryKey: ["signals", minScore],
-    queryFn: ({ signal }) => fetchSignals(minScore, signal),
+    queryKey: ["signals", mode, minScore],
+    queryFn: ({ signal }) =>
+      mode === "momentum" ? fetchMomentumSignals(minScore, signal) : fetchSignals(minScore, signal),
     refetchInterval: paused ? false : Math.max(intervalSec, 10) * 1000,
     refetchIntervalInBackground: false,
+    staleTime: 0,
+  });
+}
+
+export function useMovers7d(
+  kind: MoverKind,
+  interval: MoverInterval = "Day1",
+  periods = 7,
+  threshold = 0,
+) {
+  return useQuery({
+    queryKey: ["movers-7d", kind, interval, periods, threshold],
+    queryFn: ({ signal }) => fetchMovers7d(kind, interval, periods, threshold, 100, signal),
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function usePaperBot() {
+  return useQuery({
+    queryKey: ["paperbot"],
+    queryFn: ({ signal }) => fetchPaperBot(signal),
+    refetchInterval: 2000,
+    staleTime: 0,
+  });
+}
+
+export function useScalpScanner() {
+  return useQuery({
+    queryKey: ["scalp-scanner"],
+    queryFn: ({ signal }) => fetchScalpScanner(signal),
+    refetchInterval: 5000,
     staleTime: 0,
   });
 }

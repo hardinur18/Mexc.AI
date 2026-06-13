@@ -9,6 +9,10 @@ import { DashboardSkeleton } from "@/components/Skeleton";
 import { TopProgressBar } from "@/components/ui/TopProgressBar";
 import { MacroHud } from "@/components/analytics/MacroHud";
 import { SignalsPanelInner } from "@/components/SignalsPanel";
+import { Movers7dPanel } from "@/components/Movers7dPanel";
+import { PaperBotPanel } from "@/components/PaperBotPanel";
+import { BotBrainPanel } from "@/components/BotBrainPanel";
+import { LiveTerminal } from "@/components/LiveTerminal";
 import { ClosedPositionsPanelInner } from "@/components/ClosedPositionsPanel";
 import { RiskDashboardInner } from "@/components/RiskDashboard";
 import { AccountBreakdownInner } from "@/components/AccountBreakdown";
@@ -141,6 +145,8 @@ function PageContent({
   switch (page) {
     case "dashboard":
       return <DashboardPage snapshot={snapshot} />;
+    case "terminal":
+      return <LiveTerminal />;
     case "signals":
       return (
         <div className="space-y-4">
@@ -150,6 +156,49 @@ function PageContent({
           <div className="page-panel overflow-hidden">
             <SignalsPanelInner />
           </div>
+        </div>
+      );
+    case "gainers":
+      return (
+        <div className="space-y-4">
+          <div className="page-panel page-titlebar">
+            <PageHeader
+              title="Top Gainer 7 Hari"
+              subtitle="Koin futures yang mengalami kenaikan harga terbesar dalam 7 hari terakhir"
+            />
+          </div>
+          <div className="page-panel overflow-hidden">
+            <Movers7dPanel kind="gainers" />
+          </div>
+        </div>
+      );
+    case "losers":
+      return (
+        <div className="space-y-4">
+          <div className="page-panel page-titlebar">
+            <PageHeader
+              title="Top Loser 7 Hari"
+              subtitle="Koin futures yang mengalami penurunan harga terbesar dalam 7 hari terakhir"
+            />
+          </div>
+          <div className="page-panel overflow-hidden">
+            <Movers7dPanel kind="losers" />
+          </div>
+        </div>
+      );
+    case "bot":
+      return (
+        <div className="space-y-4">
+          <div className="page-panel page-titlebar">
+            <PageHeader
+              title="Bot Paper Trading"
+              subtitle="Bot simulasi dengan saldo dummy $100 — entry/TP/SL otomatis pada harga live, tanpa order nyata"
+            />
+          </div>
+          <div className="page-panel overflow-hidden">
+            <PaperBotPanel />
+          </div>
+          <BotBrainPanel />
         </div>
       );
     case "cascade":

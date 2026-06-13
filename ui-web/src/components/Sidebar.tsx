@@ -1,6 +1,10 @@
 import {
   LayoutDashboard,
+  Activity,
   Radar,
+  TrendingUp,
+  TrendingDown,
+  Bot,
   Zap,
   Award,
   Shield,
@@ -17,7 +21,7 @@ import { useUiStore } from "@/store/ui";
 import { cn } from "@/lib/cn";
 import { motion } from "motion/react";
 
-type Page = "dashboard" | "signals" | "cascade" | "performance" | "risk" | "accounts" | "history";
+type Page = "dashboard" | "terminal" | "signals" | "gainers" | "losers" | "bot" | "cascade" | "performance" | "risk" | "accounts" | "history";
 
 interface NavItem {
   id: Page;
@@ -28,7 +32,11 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dasbor", eyebrow: "Ikhtisar", icon: <LayoutDashboard size={17} /> },
+  { id: "terminal", label: "Live Terminal", eyebrow: "Neon · realtime", icon: <Activity size={17} /> },
   { id: "signals", label: "Sinyal", eyebrow: "Confluence", icon: <Radar size={17} /> },
+  { id: "gainers", label: "Top Gainer 7H", eyebrow: "Naik 7 hari", icon: <TrendingUp size={17} /> },
+  { id: "losers", label: "Top Loser 7H", eyebrow: "Turun 7 hari", icon: <TrendingDown size={17} /> },
+  { id: "bot", label: "Bot Paper", eyebrow: "Simulasi $100", icon: <Bot size={17} /> },
   { id: "cascade", label: "Rantai DCA", eyebrow: "Eksekusi", icon: <Zap size={17} /> },
   { id: "performance", label: "Kinerja", eyebrow: "Win rate", icon: <Award size={17} /> },
   { id: "risk", label: "Risiko", eyebrow: "Exposure", icon: <Shield size={17} /> },

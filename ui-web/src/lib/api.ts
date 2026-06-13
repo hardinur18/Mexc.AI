@@ -3,6 +3,9 @@ import type {
   CategoriesResponse,
   CircuitBreaker,
   ClosedPositionsResponse,
+  Movers7dResponse,
+  PaperBotState,
+  ScalpScanner,
   MacroContext,
   PortfolioHeat,
   SignalsResponse,
@@ -35,6 +38,76 @@ export async function fetchCategories(signal?: AbortSignal): Promise<CategoriesR
 export async function fetchSignals(minScore = 65, signal?: AbortSignal): Promise<SignalsResponse> {
   const res = await fetch(`/api/signals?min_score=${minScore}`, { signal });
   if (!res.ok) throw new Error(`signals HTTP ${res.status}`);
+  return (await res.json()) as SignalsResponse;
+}
+
+export async function fetchPaperBot(signal?: AbortSignal): Promise<PaperBotState> {
+  const res = await fetch("/api/paperbot/state", { signal });
+  if (!res.ok) throw new Error(`paperbot HTTP ${res.status}`);
+  return (await res.json()) as PaperBotState;
+}
+
+export async function fetchScalpScanner(signal?: AbortSignal): Promise<ScalpScanner> {
+  const res = await fetch("/api/paperbot/scanner", { signal });
+  if (!res.ok) throw new Error(`scanner HTTP ${res.status}`);
+  return (await res.json()) as ScalpScanner;
+}
+
+export async function paperBotAction(action: "start" | "stop"): Promise<void> {
+  const res = await fetch(`/api/paperbot/${action}`, { method: "POST" });
+  if (!res.ok) throw new Error(`paperbot ${action} HTTP ${res.status}`);
+}
+
+export async function resetPaperBot(balance = 100): Promise<void> {
+  const res = await fetch(`/api/paperbot/reset?balance=${balance}`, { method: "POST" });
+  if (!res.ok) throw new Error(`paperbot reset HTTP ${res.status}`);
+}
+
+export interface PaperBotConfigUpdate {
+  max_positions?: number;
+  margin_per_trade?: number;
+  leverage?: number;
+  roi_take_profit?: number;
+  risk_pct?: number;
+  signal_min_score?: number;
+}
+export async function updatePaperBotConfig(cfg: PaperBotConfigUpdate): Promise<void> {
+  const qs = Object.entries(cfg)
+    .filter(([, v]) => v != null)
+    .map(([k, v]) => `${k}=${v}`)
+    .join("&");
+  const res = await fetch(`/api/paperbot/config?${qs}`, { method: "POST" });
+  if (!res.ok) throw new Error(`paperbot config HTTP ${res.status}`);
+}
+
+export async function closePaperBotPosition(id: number): Promise<void> {
+  const res = await fetch(`/api/paperbot/close/${id}`, { method: "POST" });
+  if (!res.ok) throw new Error(`paperbot close HTTP ${res.status}`);
+}
+
+export type MoverKind = "gainers" | "losers";
+/** MEXC candle granularity used by the movers panel. */
+export type MoverInterval = "Day1" | "Month1";
+
+export async function fetchMovers7d(
+  kind: MoverKind,
+  interval: MoverInterval = "Day1",
+  periods = 7,
+  threshold = 0,
+  limit = 100,
+  signal?: AbortSignal,
+): Promise<Movers7dResponse> {
+  // gainers filter with min_change (≥), losers with max_change (≤).
+  const param = kind === "losers" ? "max_change" : "min_change";
+  const qs = `interval=${interval}&periods=${periods}&limit=${limit}&${param}=${threshold}`;
+  const res = await fetch(`/api/${kind}-7d?${qs}`, { signal });
+  if (!res.ok) throw new Error(`${kind}-7d HTTP ${res.status}`);
+  return (await res.json()) as Movers7dResponse;
+}
+
+export async function fetchMomentumSignals(minScore = 60, signal?: AbortSignal): Promise<SignalsResponse> {
+  const res = await fetch(`/api/momentum-signals?min_score=${minScore}`, { signal });
+  if (!res.ok) throw new Error(`momentum signals HTTP ${res.status}`);
   return (await res.json()) as SignalsResponse;
 }
 

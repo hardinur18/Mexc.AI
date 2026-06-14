@@ -5950,56 +5950,106 @@ def get_losers_7d(
 #    direction confirmed across timeframes. TP/SL sized from 4h ATR (R:R ~1.6).
 # ═══════════════════════════════════════════════════════════════════
 _scalp_cache: tuple[float, list[dict]] | None = None
-_SCALP_TTL_SECONDS = 120         # confluence is heavy -> cache longer (4h signals move slowly)
-_SIGNAL_UNIVERSE = 18            # cap symbols scanned (compute_analytics is expensive)
-# Note: the min confluence score is configurable per-bot (PAPER_BOT.signal_min_score).
+_SCALP_TTL_SECONDS = 20          # fast 5m/15m signal is light -> refresh often
+_SIGNAL_UNIVERSE = 40            # scan more (fast signal is cheap)
+# Note: the min score is configurable per-bot (PAPER_BOT.signal_min_score).
 
 
 def _scalp_eval(sym: str, price: float = 0.0) -> dict | None:
-    """Per-symbol CONFLUENCE evaluation — the bot's research-backed brain.
+    """FAST per-symbol signal on 5m + 15m — trend-aligned pullback / momentum.
 
-    Pulls the full multi-indicator analysis (RSI MTF, DMI, divergence, SMC, S/R,
-    orderflow) and only flags an entry when the confluence score is high and the
-    direction is confirmed. TP/SL sized from 4h ATR (R:R ~1.6).
+    Lighter & far more frequent than the 4h confluence (for "greget"/active trading):
+    15m sets trend & regime; 5m RSI + last-candle momentum time the entry. TP/SL from
+    5m ATR (R:R ~2). Keeps the adaptive conviction/grind split + risk cap + trailing.
     """
+    c5 = fetch_klines_cached(sym, "Min5", 60)
+    if len(c5) < 30:
+        return None
+    closes5 = [b["c"] for b in c5]
+    px5 = closes5[-1]
+    if px5 > 0:
+        price = px5
     if price <= 0:
         return None
-    try:
-        a = compute_analytics(sym, lite=True)
-    except Exception:
+    rsi5 = _compute_rsi(closes5, 14)
+    if rsi5 is None:
         return None
-    conf = float(a.get("confluence_score") or 0)
-    direction = a.get("signal_direction") or "NONE"
-    score_long = float(a.get("score_long") or 0)
-    score_short = float(a.get("score_short") or 0)
-    verdict = a.get("verdict") or "AVOID"
-    atr_pct = a.get("atr_pct_4h")
-    if not atr_pct or atr_pct <= 0:
-        atr_pct = 2.0  # fallback sizing
+    # 5m ATR(14)
+    trs = []
+    for i in range(1, len(c5)):
+        h, l, pc = c5[i]["h"], c5[i]["l"], c5[i - 1]["c"]
+        trs.append(max(h - l, abs(h - pc), abs(l - pc)))
+    atr = sum(trs[-14:]) / min(14, len(trs)) if trs else 0.0
+    atr_pct = atr / price * 100 if price else 0.0
 
-    # Actionable ONLY on high conviction + a clear direction (threshold is configurable).
+    # 15m regime (SMA20 + 8-bar slope)
+    c15 = fetch_klines_cached(sym, "Min15", 40)
+    closes15 = [b["c"] for b in c15]
+    regime = "unknown"
+    slope = 0.0
+    if len(closes15) >= 20:
+        sma15 = sum(closes15[-20:]) / 20
+        base = closes15[-8] if closes15[-8] else closes15[-1]
+        slope = (closes15[-1] - base) / base * 100 if base else 0.0
+        above = closes15[-1] > sma15
+        if slope > 0.6 and above:
+            regime = "trending_up"
+        elif slope > 0.12 and above:
+            regime = "mild_up"
+        elif slope < -0.6 and not above:
+            regime = "trending_down"
+        elif slope < -0.12 and not above:
+            regime = "mild_down"
+        else:
+            regime = "ranging"
+    trend_up = regime in ("trending_up", "mild_up")
+    trend_dn = regime in ("trending_down", "mild_down")
+
+    # Composite directional scores (0-100): trend + RSI pullback + last-candle momentum.
+    up_candle = c5[-1]["c"] >= c5[-1]["o"]
+    score_long = 0.0
+    score_short = 0.0
+    if trend_up:
+        score_long += 35
+    if trend_dn:
+        score_short += 35
+    score_long += max(0.0, 58 - rsi5)   # cheaper (lower RSI) -> stronger LONG pullback
+    score_short += max(0.0, rsi5 - 42)  # richer (higher RSI) -> stronger SHORT
+    score_long += 12 if up_candle else 0
+    score_short += 0 if up_candle else 12
+    score_long = min(100.0, score_long)
+    score_short = min(100.0, score_short)
+
+    if score_long >= score_short:
+        direction, conf = "LONG", score_long
+    else:
+        direction, conf = "SHORT", score_short
+
+    # Adaptive strategy by regime (same logic as before, on the fast TF).
     bias = None
-    if conf >= PAPER_BOT.signal_min_score and direction in ("LONG", "SHORT"):
-        bias = "long" if direction == "LONG" else "short"
+    strategy = None
+    if conf >= PAPER_BOT.signal_min_score:
+        b = "long" if direction == "LONG" else "short"
+        aligned = (direction == "LONG" and trend_up) or (direction == "SHORT" and trend_dn)
+        if aligned:
+            bias, strategy = b, "conviction"
+        elif regime in ("ranging", "mild_up", "mild_down"):
+            bias, strategy = b, "grind"
 
+    # TP farther than SL (R:R ~2) on 5m ATR -> fast hits, winners > losers.
     tp = sl = 0.0
     if bias == "long":
-        tp = price * (1 + 1.6 * atr_pct / 100)
+        tp = price * (1 + 2.0 * atr_pct / 100)
         sl = price * (1 - 1.0 * atr_pct / 100)
     elif bias == "short":
-        tp = price * (1 - 1.6 * atr_pct / 100)
+        tp = price * (1 - 2.0 * atr_pct / 100)
         sl = price * (1 + 1.0 * atr_pct / 100)
 
-    # Reason from the confluence breakdown (top research factors) or the verdict.
-    bits: list[str] = []
-    for item in (a.get("confluence_breakdown") or [])[:3]:
-        if isinstance(item, dict):
-            lbl = item.get("label") or item.get("name") or item.get("factor") or ""
-            if lbl:
-                bits.append(str(lbl))
-        elif isinstance(item, str):
-            bits.append(item)
-    reason = " · ".join(bits) if bits else f"{verdict} (score {conf:.0f})"
+    rlabel = {
+        "trending_up": "tren naik", "mild_up": "naik lemah", "trending_down": "tren turun",
+        "mild_down": "turun lemah", "ranging": "ranging", "unknown": "?",
+    }.get(regime, regime)
+    reason = f"{direction} · RSI5 {rsi5:.0f} · 15m {rlabel} · ATR {atr_pct:.2f}%"
 
     return {
         "symbol": sym,
@@ -6009,9 +6059,11 @@ def _scalp_eval(sym: str, price: float = 0.0) -> dict | None:
         "direction": direction,
         "score_long": round(score_long, 1),
         "score_short": round(score_short, 1),
-        "verdict": verdict,
+        "verdict": direction if bias else "wait",
         "atr_pct": round(atr_pct, 2),
+        "regime": regime,
         "bias": bias,
+        "strategy": strategy,
         "order_type": "market",
         "reason": reason,
         "score": round(conf, 1),
@@ -6176,6 +6228,8 @@ def post_paperbot_config(
     roi_take_profit: float | None = Query(default=None),
     risk_pct: float | None = Query(default=None),
     signal_min_score: float | None = Query(default=None),
+    adaptive_enabled: bool | None = Query(default=None),
+    tp_dollar: float | None = Query(default=None),
 ):
     PAPER_BOT.update_config(
         max_positions=max_positions,
@@ -6184,6 +6238,8 @@ def post_paperbot_config(
         roi_take_profit=roi_take_profit,
         risk_pct=risk_pct,
         signal_min_score=signal_min_score,
+        adaptive_enabled=adaptive_enabled,
+        tp_dollar=tp_dollar,
     )
     return {"ok": True}
 

@@ -42,6 +42,13 @@ class PaperPosition:
     icon_url: str | None = None
     mark: float = 0.0
     trailed: bool = False  # True once SL ratcheted into profit (breakeven/trail)
+    # --- adaptive strategy / DCA ladder (strategy="grind" -> averaging) ---
+    strategy: str = "conviction"  # "conviction" (single, fast TP) | "grind" (DCA ladder)
+    adds: int = 1
+    max_adds: int = 1
+    add_margin: float = 0.0
+    last_add_price: float = 0.0
+    hard_sl_price: float = 0.0
 
     @property
     def notional(self) -> float:
@@ -100,14 +107,23 @@ class PaperBot:
         self.margin_fraction = 0.08   # fallback if margin_per_trade <= 0
         self.margin_per_trade = 8.0   # max $ modal per entry (cap; user-configurable)
         self.risk_pct = 0.03          # cap loss-at-SL to 3% of equity per trade (0 = off)
-        self.leverage = 50.0          # high leverage: small price moves -> big PnL swings
-        self.roi_take_profit = 0.8    # bank profit when uPnL >= 80% of margin (0 = off)
+        self.leverage = 10.0          # moderate: gives price room so TP isn't pre-empted by noise
+        self.roi_take_profit = 0.5    # bank profit when uPnL >= 50% of margin (0 = off)
+        self.tp_dollar = 0.0          # bank IMMEDIATELY when uPnL >= $X (0 = off) — "jangan ditahan"
         self.signal_min_score = 55    # min confluence score to enter (higher = stricter/rarer)
         self.tp_pct = 0.005           # fallback only — scalp signal supplies ATR-based TP
         self.sl_pct = 0.012           # fallback only — scalp signal supplies ATR-based SL
-        self.max_hold_ms = 6 * 3600 * 1000  # confluence = swing-ish; give it room (6h backstop)
+        self.max_hold_ms = 45 * 60 * 1000  # fast 5m/15m signal -> time-exit after 45 min
         self.be_trigger = 0.35        # lock profit earlier — once >=35% of the way to TP
         self.trail_lock = 0.6         # lock 60% of the favorable move (protect winners)
+        # --- adaptive GRIND (DCA) mode for ranging markets ("nyangkul") ---
+        self.adaptive_enabled = True  # auto-pick conviction (trend) vs grind (range) per coin
+        self.grind_add_margin = 1.0   # $ per ladder rung
+        self.grind_max_adds = 5       # max rungs (1-2-3-4-5)
+        self.grind_step_pct = 0.012   # add a rung every -1.2% adverse
+        self.grind_tp_pct = 0.010     # close the stack when price bounces +1% above avg entry
+        self.grind_hard_sl_pct = 0.08 # cut the WHOLE ladder if -8% from first entry
+        self.grind_leverage = 5.0     # low leverage so the ladder survives to average
         self.pending: list[PendingOrder] = []
         self.pending_ttl_ms = 5 * 60 * 1000  # cancel resting limit if unfilled after 5 min
         self._load()
@@ -152,10 +168,14 @@ class PaperBot:
                 self.leverage = max(1.0, min(float(kw["leverage"]), 125.0))
             if kw.get("roi_take_profit") is not None:
                 self.roi_take_profit = max(0.0, min(float(kw["roi_take_profit"]), 50.0))
+            if kw.get("tp_dollar") is not None:
+                self.tp_dollar = max(0.0, float(kw["tp_dollar"]))
             if kw.get("risk_pct") is not None:
                 self.risk_pct = max(0.0, min(float(kw["risk_pct"]), 0.5))
             if kw.get("signal_min_score") is not None:
                 self.signal_min_score = max(0.0, min(float(kw["signal_min_score"]), 100.0))
+            if kw.get("adaptive_enabled") is not None:
+                self.adaptive_enabled = bool(kw["adaptive_enabled"])
             self._save()
 
     def close_position(self, pos_id: int, price: float | None, now_ms: int) -> bool:
@@ -182,6 +202,30 @@ class PaperBot:
                 if not px or px <= 0:
                     continue
                 p.mark = px
+
+                # ── GRIND (DCA) ladder: average on adverse, TP the stack, hard-stop ──
+                if p.strategy == "grind":
+                    if p.adds < p.max_adds:
+                        adverse = (
+                            (p.last_add_price - px) / p.last_add_price
+                            if p.side == "LONG"
+                            else (px - p.last_add_price) / p.last_add_price
+                        )
+                        if adverse >= self.grind_step_pct:
+                            self._add_to_position(p, px)
+                    reason = None
+                    if self.tp_dollar > 0 and p.upnl(px) >= self.tp_dollar:
+                        reason = "TP"  # banked the easy dollar profit — jangan ditahan
+                    elif (p.side == "LONG" and px >= p.tp) or (p.side == "SHORT" and px <= p.tp):
+                        reason = "TP"  # bounced above average entry
+                    elif (p.side == "LONG" and px <= p.hard_sl_price) or (
+                        p.side == "SHORT" and px >= p.hard_sl_price
+                    ):
+                        reason = "SL"  # whole ladder stopped out
+                    if reason:
+                        self._close(p, px, reason, now_ms)
+                    continue
+
                 # Breakeven + trailing stop: once price covers be_trigger of the way to
                 # TP, ratchet SL to lock part of the gain (SL only ever moves favorably).
                 tp_dist = abs(p.tp - p.entry)
@@ -195,12 +239,15 @@ class PaperBot:
                         p.sl = p.entry - lock
                         p.trailed = True
                 reason = None
-                if p.side == "LONG":
+                # Dollar take-profit: bank the easy green immediately — "jangan ditahan".
+                if self.tp_dollar > 0 and p.upnl(px) >= self.tp_dollar:
+                    reason = "TP"
+                if reason is None and p.side == "LONG":
                     if px >= p.tp:
                         reason = "TP"
                     elif px <= p.sl:
                         reason = "TRAIL" if p.trailed else "SL"
-                else:
+                elif reason is None:
                     if px <= p.tp:
                         reason = "TP"
                     elif px >= p.sl:
@@ -238,14 +285,17 @@ class PaperBot:
                 if not sym or sym in committed or c.get("bias") not in ("long", "short"):
                     continue
                 side = "LONG" if c["bias"] == "long" else "SHORT"
-                if c.get("order_type") == "market":
+                # Adaptive: grind (DCA) in ranging markets, conviction single-entry in trends.
+                if self.adaptive_enabled and c.get("strategy") == "grind":
+                    ok = self._open_grind(c, now_ms)
+                elif c.get("order_type") == "limit":
+                    ok = self._place_limit(c, now_ms)
+                else:
                     ok = self._open_position(
                         sym, str(sym).split("_")[0], side,
                         float(c.get("price") or 0), float(c.get("tp") or 0), float(c.get("sl") or 0),
                         False, c.get("icon_url"), now_ms,
                     )
-                else:
-                    ok = self._place_limit(c, now_ms)
                 if ok:
                     committed.add(sym)
 
@@ -332,6 +382,65 @@ class PaperBot:
         )
         self._next_id += 1
         return True
+
+    def _grind_tp_price(self, side: str, avg_entry: float) -> float:
+        return avg_entry * (1 + self.grind_tp_pct) if side == "LONG" else avg_entry * (1 - self.grind_tp_pct)
+
+    def _open_grind(self, c: dict, now_ms: int) -> bool:
+        """Open the first rung of a GRIND (DCA) ladder at market, low leverage."""
+        side = "LONG" if c["bias"] == "long" else "SHORT"
+        price = float(c.get("price") or 0)
+        if price <= 0:
+            return False
+        margin = round(min(self.grind_add_margin, self.cash), 4)
+        if margin < 0.25:
+            return False
+        lev = self.grind_leverage
+        notional = margin * lev
+        qty = notional / price
+        hard_sl = price * (1 - self.grind_hard_sl_pct) if side == "LONG" else price * (1 + self.grind_hard_sl_pct)
+        pos = PaperPosition(
+            id=self._next_id,
+            symbol=c["symbol"],
+            coin=str(c["symbol"]).split("_")[0],
+            side=side,
+            entry=price,
+            qty=qty,
+            margin=margin,
+            leverage=lev,
+            tp=round(self._grind_tp_price(side, price), 8),
+            sl=round(hard_sl, 8),
+            entry_fee=notional * MAKER_FEE_RATE,
+            opened_ms=now_ms,
+            icon_url=c.get("icon_url"),
+            mark=price,
+            strategy="grind",
+            adds=1,
+            max_adds=self.grind_max_adds,
+            add_margin=self.grind_add_margin,
+            last_add_price=price,
+            hard_sl_price=round(hard_sl, 8),
+        )
+        self.cash -= margin
+        self._next_id += 1
+        self.positions.append(pos)
+        return True
+
+    def _add_to_position(self, p: PaperPosition, price: float) -> None:
+        """Average into an existing grind ladder at the current price."""
+        if self.cash < p.add_margin or price <= 0:
+            return
+        add_notional = p.add_margin * p.leverage
+        add_qty = add_notional / price
+        total_qty = p.qty + add_qty
+        p.entry = (p.entry * p.qty + price * add_qty) / total_qty  # weighted avg
+        p.qty = total_qty
+        p.margin = round(p.margin + p.add_margin, 4)
+        p.entry_fee += add_notional * MAKER_FEE_RATE
+        p.adds += 1
+        p.last_add_price = price
+        p.tp = round(self._grind_tp_price(p.side, p.entry), 8)
+        self.cash -= p.add_margin
 
     def _close(self, p: PaperPosition, px: float, reason: str, now_ms: int) -> None:
         exit_fee = (p.qty * px) * FEE_RATE
@@ -482,7 +591,11 @@ class PaperBot:
                     "risk_pct": self.risk_pct,
                     "leverage": self.leverage,
                     "roi_take_profit": self.roi_take_profit,
+                    "tp_dollar": self.tp_dollar,
                     "signal_min_score": self.signal_min_score,
+                    "adaptive_enabled": self.adaptive_enabled,
+                    "grind_max_adds": self.grind_max_adds,
+                    "grind_add_margin": self.grind_add_margin,
                     "sl_pct": self.sl_pct,
                     "fee_rate": FEE_RATE,
                 },
@@ -507,6 +620,16 @@ class PaperBot:
                 "pending": [asdict(o) for o in self.pending],
                 "closed": [asdict(t) for t in self.closed],
                 "equity_curve": self.equity_curve[-2000:],
+                "config": {
+                    "max_positions": self.max_positions,
+                    "margin_per_trade": self.margin_per_trade,
+                    "risk_pct": self.risk_pct,
+                    "leverage": self.leverage,
+                    "roi_take_profit": self.roi_take_profit,
+                    "tp_dollar": self.tp_dollar,
+                    "signal_min_score": self.signal_min_score,
+                    "adaptive_enabled": self.adaptive_enabled,
+                },
             }
             tmp = self.state_path.with_suffix(".tmp")
             tmp.write_text(json.dumps(data))
@@ -541,3 +664,13 @@ class PaperBot:
             for o in data.get("pending", [])
         ]
         self.equity_curve = data.get("equity_curve", [])
+        # Restore saved config so user settings persist across restarts.
+        cfg = data.get("config") or {}
+        self.max_positions = cfg.get("max_positions", self.max_positions)
+        self.margin_per_trade = cfg.get("margin_per_trade", self.margin_per_trade)
+        self.risk_pct = cfg.get("risk_pct", self.risk_pct)
+        self.leverage = cfg.get("leverage", self.leverage)
+        self.roi_take_profit = cfg.get("roi_take_profit", self.roi_take_profit)
+        self.tp_dollar = cfg.get("tp_dollar", self.tp_dollar)
+        self.signal_min_score = cfg.get("signal_min_score", self.signal_min_score)
+        self.adaptive_enabled = cfg.get("adaptive_enabled", self.adaptive_enabled)

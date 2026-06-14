@@ -905,6 +905,11 @@ export interface BotPosition {
   dist_sl_pct: number;
   /** Loss-at-SL as % of equity (the "risk per entry"). */
   risk_pct: number;
+  /** Adaptive strategy: "conviction" (single, fast TP) or "grind" (DCA ladder). */
+  strategy: "conviction" | "grind";
+  /** Grind ladder rungs filled / max (1 for conviction). */
+  adds: number;
+  max_adds: number;
 }
 
 export interface BotClosedTrade {
@@ -971,7 +976,11 @@ export interface PaperBotState {
     risk_pct: number;
     leverage: number;
     roi_take_profit: number;
+    tp_dollar: number;
     signal_min_score: number;
+    adaptive_enabled: boolean;
+    grind_max_adds: number;
+    grind_add_margin: number;
     sl_pct: number;
     fee_rate: number;
   };
@@ -995,7 +1004,9 @@ export interface ScalpEval {
   score_short: number;
   verdict: string;
   atr_pct: number;
+  regime: string;
   bias: "long" | "short" | null;
+  strategy: "conviction" | "grind" | null;
   order_type: "limit" | "market" | null;
   reason: string;
   score: number;

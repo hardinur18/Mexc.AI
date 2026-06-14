@@ -171,6 +171,8 @@ function SettingsForm({
   const [roi, setRoi] = useState(Math.round(cfg.roi_take_profit * 100));
   const [risk, setRisk] = useState(Math.round(cfg.risk_pct * 100 * 10) / 10);
   const [minScore, setMinScore] = useState(Math.round(cfg.signal_min_score));
+  const [adaptive, setAdaptive] = useState(cfg.adaptive_enabled);
+  const [tpUsd, setTpUsd] = useState(cfg.tp_dollar);
 
   function save() {
     onSave({
@@ -180,6 +182,8 @@ function SettingsForm({
       roi_take_profit: roi / 100,
       risk_pct: risk / 100,
       signal_min_score: minScore,
+      adaptive_enabled: adaptive,
+      tp_dollar: tpUsd,
     });
   }
 
@@ -188,11 +192,25 @@ function SettingsForm({
       <div className="flex items-center gap-1.5 self-center text-[11px] font-bold uppercase tracking-wider text-[var(--color-fg-faint)]">
         <Settings size={13} /> Pengaturan Bot
       </div>
+      <button
+        type="button"
+        onClick={() => setAdaptive((v) => !v)}
+        title="Adaptif: bot pilih sendiri YAKIN (trending) vs NYANGKUL (ranging)"
+        className={cn(
+          "h-8 self-center rounded-[var(--radius-sm)] border px-2.5 text-[11px] font-bold transition",
+          adaptive
+            ? "border-[var(--color-accent-ring)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]"
+            : "border-[var(--color-border)] bg-[var(--color-bg-elev-2)] text-[var(--color-fg-subtle)]",
+        )}
+      >
+        Adaptif: {adaptive ? "ON" : "OFF"}
+      </button>
       <Field label="Maks Posisi" value={maxPos} onChange={setMaxPos} min={1} max={20} />
       <Field label="Skor Min Entry" value={minScore} onChange={setMinScore} min={0} max={100} step={1} />
       <Field label="Risk/Entry %" value={risk} onChange={setRisk} min={0} max={20} step={0.5} />
       <Field label="Maks Modal/Entry $" value={modal} onChange={setModal} min={1} step={1} />
       <Field label="Leverage" value={lev} onChange={setLev} min={1} max={125} />
+      <Field label="TP $ (auto)" value={tpUsd} onChange={setTpUsd} min={0} step={0.5} />
       <Field label="Target Profit %" value={roi} onChange={setRoi} min={0} step={10} />
       <button
         type="button"
@@ -310,7 +328,7 @@ export function PaperBotPanel() {
 
       {/* Settings */}
       <SettingsForm
-        key={`${data.config.max_positions}-${data.config.margin_per_trade}-${data.config.leverage}-${data.config.roi_take_profit}-${data.config.risk_pct}-${data.config.signal_min_score}`}
+        key={`${data.config.max_positions}-${data.config.margin_per_trade}-${data.config.leverage}-${data.config.roi_take_profit}-${data.config.risk_pct}-${data.config.signal_min_score}-${data.config.adaptive_enabled}-${data.config.tp_dollar}`}
         cfg={data.config}
         onSave={(u) => act(() => updatePaperBotConfig(u))}
         busy={busy}
@@ -431,6 +449,21 @@ export function PaperBotPanel() {
                       <div className="flex items-center gap-2">
                         <CoinIcon coin={p.coin} iconUrl={p.icon_url} size={22} />
                         <span className="text-[13px] font-semibold text-[var(--color-fg)]">{p.coin}</span>
+                        {p.strategy === "grind" ? (
+                          <span
+                            className="rounded-[var(--radius-sm)] bg-[var(--color-warning-soft)] px-1 py-0.5 text-[9px] font-bold text-[var(--color-warning)]"
+                            title="Mode nyangkul (DCA grid) — rung terisi/maks"
+                          >
+                            ⛏ {p.adds}/{p.max_adds}
+                          </span>
+                        ) : (
+                          <span
+                            className="rounded-[var(--radius-sm)] bg-[var(--color-accent-soft)] px-1 py-0.5 text-[9px] font-bold text-[var(--color-accent)]"
+                            title="Mode yakin (conviction) — entry tunggal, TP cepat"
+                          >
+                            🎯 YAKIN
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-2 py-2">
@@ -579,10 +612,10 @@ export function PaperBotPanel() {
 
       <p className="px-1 text-[11px] leading-relaxed text-[var(--color-fg-faint)]">
         ⚠️ Ini bot <b>simulasi (paper)</b> dengan saldo dummy — tidak ada order nyata ke MEXC. Entry pakai
-        <b> confluence engine</b> (RSI multi-TF + DMI + divergence + SMC + S/R + orderflow) — cuma masuk saat
-        skor konviksi tinggi (≥68) & arah terkonfirmasi multi-timeframe. TP/SL berbasis ATR 4h (R:R ~1.6),
-        risk per entry ≤{Math.round(data.config.risk_pct * 100)}%, leverage {data.config.leverage}x,
-        fee {(data.config.fee_rate * 100).toFixed(3)}%/sisi. Hasil simulasi bukan jaminan hasil nyata.
+        <b> confluence engine</b> (RSI multi-TF + DMI + divergence + SMC + S/R + orderflow). Mode{" "}
+        <b>{data.config.adaptive_enabled ? "ADAPTIF" : "fixed"}</b>: 🎯 YAKIN (trending → entry tunggal, TP cepat) atau
+        ⛏ NYANGKUL (ranging → DCA averaging, TP kecil sering, ada hard-stop). Risk per entry
+        ≤{Math.round(data.config.risk_pct * 100)}%, leverage {data.config.leverage}x. Hasil simulasi bukan jaminan hasil nyata.
       </p>
     </div>
   );

@@ -70,6 +70,8 @@ export interface PaperBotConfigUpdate {
   roi_take_profit?: number;
   risk_pct?: number;
   signal_min_score?: number;
+  adaptive_enabled?: boolean;
+  tp_dollar?: number;
 }
 export async function updatePaperBotConfig(cfg: PaperBotConfigUpdate): Promise<void> {
   const qs = Object.entries(cfg)
